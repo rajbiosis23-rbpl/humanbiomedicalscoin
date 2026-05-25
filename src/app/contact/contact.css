@@ -1,0 +1,147 @@
+.contact-hero{
+  padding:140px 0 100px;
+  background:
+  linear-gradient(
+    to bottom,
+    #fff8f2,
+    #fff
+  );
+}
+
+.contact-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:70px;
+  align-items:center;
+}
+
+.contact-title{
+  font-size:72px;
+  line-height:88px;
+  font-weight:800;
+  color:#111;
+}
+
+.contact-desc{
+  font-size:22px;
+  line-height:40px;
+  color:#666;
+  margin-top:30px;
+}
+
+.contact-form-card{
+  background:#fff;
+  padding:50px;
+  border-radius:40px;
+  box-shadow:0 20px 60px rgba(0,0,0,.08);
+  border:1px solid #f4e7d7;
+}
+
+.contact-form{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.contact-input{
+  width:100%;
+  height:68px;
+  border:1px solid #e7d7c8;
+  border-radius:18px;
+  padding:0 24px;
+  font-size:18px;
+  outline:none;
+  transition:.3s;
+}
+
+.contact-input:focus{
+  border-color:#9b111e;
+}
+
+.contact-textarea{
+  width:100%;
+  height:180px;
+  border:1px solid #e7d7c8;
+  border-radius:18px;
+  padding:24px;
+  font-size:18px;
+  resize:none;
+  outline:none;
+}
+
+.contact-btn{
+  width:100%;
+  height:70px;
+  border:none;
+  border-radius:18px;
+  background:
+  linear-gradient(
+    135deg,
+    #9b111e,
+    #d72638
+  );
+  color:white;
+  font-size:20px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.contact-info{
+  padding:30px 0;
+  background:#fff;
+}
+
+.contact-info-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:35px;
+}
+
+.contact-card{
+  background:#fff8f2;
+  border-radius:35px;
+  padding:45px;
+  border:1px solid #f2e5d6;
+  text-align:center;
+}
+
+.contact-card h3{
+  font-size:30px;
+  margin-top:20px;
+}
+
+.contact-card p{
+  color:#666;
+  margin-top:14px;
+  line-height:34px;
+  font-size:18px;
+}
+
+.map-section{
+  padding-bottom:120px;
+}
+
+.map-box{
+  height:500px;
+  border-radius:40px;
+  overflow:hidden;
+  box-shadow:
+  0 20px 60px rgba(0,0,0,.08);
+}
+
+@media(max-width:991px){
+
+.contact-grid{
+grid-template-columns:1fr;
+}
+
+.contact-info-grid{
+grid-template-columns:1fr;
+}
+
+.contact-title{
+font-size:50px;
+line-height:62px;
+}
+
+}

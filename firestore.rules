@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ================= USERS ================= */
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    /* ================= EMPLOYEES ================= */
+    match /employees/{employeeId} {
+      allow read, write: if true;
+    }
+
+    /* ================= TARGETS ================= */
+    match /targets/{targetId} {
+      allow read, write: if true;
+    }
+
+    /* ================= SELF ASSESSMENTS ================= */
+    match /selfAssessments/{assessmentId} {
+      allow read, write: if true;
+    }
+
+    /* ================= SALES ================= */
+    match /sales/{docId} {
+      allow read, write: if true;
+    }
+
+     /* ================= INQUIRIES (FULL DATA) ================= */
+    match /inquiries/{inquiryId} {
+      allow read, write: if true;
+    }
+
+    /* ================= INQUIRIES PUBLIC (MASKED DATA) ================= */
+    match /inquiries_public/{docId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+    
+  	// ====================== WEBSITES DATA =================================
+    
+    match /websites/{websiteId}/{document=**} {
+    	allow read, write: if true; 
+    }
+    
+    /* ================= CONTACT QUERIES ================= */
+      match /contactQueries/{docId} {
+        allow read, write: if true;
+      }
+			
+      /* ================= PRODUCT QUERIES ================= */
+      match /productQueries/{docId} {
+        allow read, write: if true;
+      }
+      /* ================= WEBSITE QUERIES ================= */
+      match /websitesQueries/{websiteId}/{collection}/{docId} {
+        allow read, write: if true;
+      }
+      /* ================= WEBSITE QUERIES (FIX) ================= */
+      match /websitesQueries/{document=**} {
+        allow read, write: if true;
+      }
+  }
+}
