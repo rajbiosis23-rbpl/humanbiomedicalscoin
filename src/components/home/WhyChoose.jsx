@@ -19,7 +19,7 @@ export default function WhyChoose() {
       number: "03",
       title: "Trusted Healthcare Partner",
       desc:
-        "Healthcare providers trust RajBiosis for quality, consistency and innovation.",
+        "Healthcare providers trust Human Biomedicals for quality, consistency and innovation.",
     },
     {
       number: "04",
@@ -29,7 +29,7 @@ export default function WhyChoose() {
     },
     {
       number: "05",
-      title: "Global Quality Standards",
+      title: "Human Biomedicals Quality Standards",
       desc:
         "Products aligned with international biomedical and healthcare standards.",
     },
@@ -48,12 +48,12 @@ export default function WhyChoose() {
 
         <div className="why-header">
           <span className="why-subtitle">
-            WHY RAJBIOSIS
+            WHY Human Biomedicals
           </span>
 
           <h2 className="why-title">
             Why Healthcare Professionals
-            Choose RajBiosis
+            Choose Human Biomedicals
           </h2>
 
           <p className="why-text">

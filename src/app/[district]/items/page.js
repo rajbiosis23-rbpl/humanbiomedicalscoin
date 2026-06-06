@@ -1,4 +1,4 @@
-import ProductsPage from "@/app/products/page";
+import ProductsPage from "@/app/items/page";
 
 import {
   collection,
@@ -91,7 +91,7 @@ export async function generateMetadata({
     `cbc machine supplier ${city}`,
     `medical machine supplier ${city}`,
     `maglumi in ${city}`,
-    `rajbiosis ${city}`,
+    `Human Biomedicals ${city}`,
     `best biomedical supplier ${city}`,
   ];
 
@@ -102,10 +102,10 @@ export async function generateMetadata({
 
   return {
     title:
-      `Maglumi Machine in ${city} | Biomedical Products in ${city} | RajBiosis`,
+      `Maglumi Machine in ${city} | Biomedical Products in ${city} | Human Biomedicals`,
 
     description:
-      `Buy Maglumi machine, CBC analyzer, Elisa reader, pathology lab equipment, biomedical products and hospital diagnostic machines in ${city}. Trusted supplier RajBiosis.`,
+      `Buy Maglumi machine, CBC analyzer, Elisa reader, pathology lab equipment, biomedical products and hospital diagnostic machines in ${city}. Trusted supplier Human Biomedicals.`,
 
     keywords,
 
@@ -116,7 +116,7 @@ export async function generateMetadata({
 
     openGraph: {
       title:
-        `Biomedical Products in ${city} | RajBiosis`,
+        `Biomedical Products in ${city} | Human Biomedicals`,
 
       description:
         `Top biomedical products, Maglumi machines, pathology lab and diagnostic equipment supplier in ${city}.`,
@@ -125,7 +125,7 @@ export async function generateMetadata({
         `https://rajbiosis.com/${district}/items`,
 
       siteName:
-        "RajBiosis",
+        "Human Biomedicals",
 
       locale:
         "en_IN",
@@ -150,7 +150,7 @@ export async function generateMetadata({
         "summary_large_image",
 
       title:
-        `Biomedical Products in ${city} | RajBiosis`,
+        `Biomedical Products in ${city} | Human Biomedicals`,
 
       description:
         `Trusted biomedical and pathology equipment supplier in ${city}.`,

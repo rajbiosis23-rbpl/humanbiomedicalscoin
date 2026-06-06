@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "./navbar.css";
-import logo from "@/public/images/logo.png";
 
 export default function Navbar() {
   const pathname =
@@ -36,7 +35,7 @@ export default function Navbar() {
     {
       name: "Home",
       path:
-        `${basePath}`,
+        `${basePath}/`,
     },
     {
       name: "About",
@@ -71,8 +70,10 @@ export default function Navbar() {
           className="navbar-logo"
         >
           <Image
-            src={logo}
-            alt="RajBiosis Logo"
+            src="/humanlogo.png"
+            alt="Human Biomedical Logo"
+            width={180}
+            height={60}
             priority
             className="logo-image"
           />

@@ -1,40 +1,25 @@
+"use client";
+
+import {
+  useEffect,
+  useState
+} from "react";
+
 import Link from "next/link";
+
+import {
+  doc,
+  getDoc
+} from "firebase/firestore";
+
+import { db } from "@/lib/firebase";
+
 import "./services.css";
 
 export default function ServicesPage() {
 
-  const services = [
-    {
-      title: "Biomedical Equipment",
-      desc:
-        "Premium biomedical products and medical equipment for hospitals, laboratories and healthcare facilities."
-    },
-    {
-      title: "Diagnostic Solutions",
-      desc:
-        "Advanced diagnostics tools and technologies for accurate medical testing and healthcare excellence."
-    },
-    {
-      title: "Laboratory Solutions",
-      desc:
-        "Innovative laboratory equipment and biomedical support systems for modern research."
-    },
-    {
-      title: "Healthcare Consultation",
-      desc:
-        "Professional consultation for selecting the right biomedical products and healthcare technologies."
-    },
-    {
-      title: "Installation Support",
-      desc:
-        "Complete setup, implementation and operational support for biomedical systems."
-    },
-    {
-      title: "Maintenance Service",
-      desc:
-        "Reliable maintenance and technical support to ensure smooth medical operations."
-    },
-  ];
+  const [services, setServices] =
+    useState([]);
 
   const process = [
     {
@@ -59,9 +44,49 @@ export default function ServicesPage() {
     }
   ];
 
+  useEffect(() => {
+
+    const fetchServices =
+      async () => {
+
+        try {
+
+          const snap =
+            await getDoc(
+              doc(
+                db,
+                "websites",
+                "humanbiomedicalscoin",
+                "pages",
+                "services"
+              )
+            );
+
+          if (snap.exists()) {
+
+            setServices(
+              snap.data()
+                ?.services || []
+            );
+
+          }
+
+        } catch (error) {
+
+          console.log(error);
+
+        }
+      };
+
+    fetchServices();
+
+  }, []);
+
   return (
+
     <main>
 
+      {/* HERO */}
       <section className="services-hero">
 
         <div className="container-custom">
@@ -80,7 +105,7 @@ export default function ServicesPage() {
 
           <p className="services-desc">
 
-            RajBiosis provides advanced
+            Human Biomedicals provides advanced
             biomedical services, laboratory
             support, diagnostics solutions
             and healthcare technologies
@@ -93,6 +118,7 @@ export default function ServicesPage() {
 
       </section>
 
+      {/* SERVICES */}
       <section className="services-section">
 
         <div className="container-custom">
@@ -114,24 +140,26 @@ export default function ServicesPage() {
 
           <div className="services-grid">
 
-            {services.map((item, index) => (
-              <div
-                key={index}
-                className="service-card"
-              >
+            {services.map(
+              (item, index) => (
 
-                <div className="service-icon" />
+                <div
+                  key={index}
+                  className="service-card"
+                >
 
-                <h3>
-                  {item.title}
-                </h3>
+                  <div className="service-icon" />
 
-                <p>
-                  {item.desc}
-                </p>
+                  <h3>
+                    {item.title}
+                  </h3>
 
-              </div>
-            ))}
+                  <p>
+                    {item.desc}
+                  </p>
+
+                </div>
+              ))}
 
           </div>
 
@@ -139,6 +167,7 @@ export default function ServicesPage() {
 
       </section>
 
+      {/* PROCESS */}
       <section className="process-section">
 
         <div className="container-custom">
@@ -159,36 +188,36 @@ export default function ServicesPage() {
 
           <div className="process-grid">
 
-            {process.map((item, index) => (
-              <div
-                key={index}
-                className="process-card"
-              >
+            {process.map(
+              (item, index) => (
 
-                <div className="process-number">
+                <div
+                  key={index}
+                  className="process-card"
+                >
 
-                  0{index + 1}
+                  <div className="process-number">
+
+                    0{index + 1}
+
+                  </div>
+
+                  <h3>
+                    {item.title}
+                  </h3>
+
+                  <p>
+                    {item.desc}
+                  </p>
 
                 </div>
-
-                <h3>
-                  {item.title}
-                </h3>
-
-                <p>
-                  {item.desc}
-                </p>
-
-              </div>
-            ))}
+              ))}
 
           </div>
 
         </div>
 
       </section>
-
-
 
     </main>
   );

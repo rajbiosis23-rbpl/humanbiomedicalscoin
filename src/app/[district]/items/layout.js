@@ -16,9 +16,9 @@ export async function generateMetadata({
     params.district;
 
   return {
-    title: `Biomedical Products in ${district} | Diagnostic & Laboratory Equipment | Global Biomedical`,
+    title: `Biomedical Products in ${district} | Diagnostic & Laboratory Equipment | Human Biomedicals`,
 
-    description: `Buy biomedical, pathology, diagnostic machines, CBC machines, laboratory and hospital equipment in ${district}. Trusted supplier with installation, support & best pricing from Global Biomedical.`,
+    description: `Buy biomedical, pathology, diagnostic machines, CBC machines, laboratory and hospital equipment in ${district}. Trusted supplier with installation, support & best pricing from Human Biomedicals.`,
 
     keywords: [
       `Biomedical Products in ${district}`,
@@ -30,7 +30,7 @@ export async function generateMetadata({
       `Pathology Equipment in ${district}`,
       `Biomedical Supplier India`,
       `Diagnostic Machine Supplier`,
-      `Global Biomedical`
+      `Human Biomedicals`
     ],
 
     robots: {
@@ -43,10 +43,10 @@ export async function generateMetadata({
     },
 
     openGraph: {
-      title: `Biomedical Products in ${district} | Global Biomedical`,
+      title: `Biomedical Products in ${district} | Huamn Biomedicals`,
       description: `Trusted supplier of biomedical, pathology, laboratory & diagnostic equipment in ${district}.`,
       url: `https://globalbiomedical.org/${slug}/items`,
-      siteName: "Global Biomedical",
+      siteName: "Human Biomedicals",
       locale: "en_IN",
       type: "website",
 
@@ -62,7 +62,7 @@ export async function generateMetadata({
 
     twitter: {
       card: "summary_large_image",
-      title: `Biomedical Products in ${district} | Global Biomedical`,
+      title: `Biomedical Products in ${district} | Human Biomedicals`,
       description: `Trusted biomedical equipment supplier in ${district}.`,
       images: ["/logo.png"],
     },

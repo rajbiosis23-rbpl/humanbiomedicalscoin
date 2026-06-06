@@ -12,12 +12,12 @@ export const metadata = {
 
   title: {
     default:
-      "Rajbiosis Diagnostic Equipment Products",
-    template: "%s | RajBiosis",
+      "Human Biomedicals Diagnostic Equipment Products",
+    template: "%s | Human Biomedicals",
   },
 
   description:
-    "RajBiosis provides premium biomedical products, laboratory solutions, diagnostic equipment and healthcare innovations.",
+    "Human Biomedicals provides premium biomedical products, laboratory solutions, diagnostic equipment and healthcare innovations.",
 
   keywords: [
     "Biomedical Products India",
@@ -25,12 +25,12 @@ export const metadata = {
     "Laboratory Equipment",
     "Diagnostic Solutions",
     "Medical Devices India",
-    "Global Biomedical Diagnostic Equipment"
+    "Human Biomedicals Diagnostic Equipment"
   ],
 
   openGraph: {
     title:
-      "Global Biomedical Diagnostic Equipment Products",
+      "Human Biomedicals Diagnostic Equipment Products",
 
     description:
       "Premium biomedical products and healthcare innovations.",
@@ -57,7 +57,7 @@ export const metadata = {
       "summary_large_image",
 
     title:
-      "Global Biomedical Diagnostic Equipment Products",
+      "Human Biomedicals Diagnostic Equipment Products",
 
     description:
       "Premium biomedical solutions.",

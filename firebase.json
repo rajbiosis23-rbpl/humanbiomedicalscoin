@@ -1,11 +1,13 @@
 {
-  "hosting": {
-    "target": "humanbiomedicalscoin",
-    "public": "out",
+  "apphosting": {
+    "backendId": "humanbiomedicalscoin",
+    "rootDir": "/",
     "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions"
     ]
   }
 }

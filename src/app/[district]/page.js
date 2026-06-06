@@ -1,3 +1,11 @@
+import Hero from "@/components/home/Hero";
+import Stats from "@/components/home/Stats";
+import WhyChoose from "@/components/home/WhyChoose";
+// import ProductShowcase from "@/components/home/ProductShowcase";
+import Testimonials from "@/components/home/Testimonials";
+// import FAQ from "@/components/home/FAQ";
+// import Newsletter from "@/components/home/Newsletter";
+
 export async function generateMetadata({
   params,
 }) {
@@ -10,15 +18,15 @@ export async function generateMetadata({
 
   const city = district
     ? district
-        .replace(/-/g, " ")
-        .replace(
-          /\b\w/g,
-          (char) =>
-            char.toUpperCase()
-        )
+      .replace(/-/g, " ")
+      .replace(
+        /\b\w/g,
+        (char) =>
+          char.toUpperCase()
+      )
     : "India";
 
-  // BROAD + LONGTAIL + INTENT SEO
+  // SEO KEYWORDS
   const keywords = [
 
     // Main Biomedical
@@ -70,7 +78,7 @@ export async function generateMetadata({
     `fully automatic analyzer ${city}`,
     `semi auto analyzer ${city}`,
 
-    // Intent Based
+    // Intent
     `best diagnostic equipment supplier ${city}`,
     `best pathology supplier ${city}`,
     `hospital lab equipment ${city}`,
@@ -79,23 +87,18 @@ export async function generateMetadata({
     `pathology machine dealer ${city}`,
 
     // Brand
-    `rajbiosis ${city}`,
-    `rajbiosis biomedical ${city}`,
+    `Human Biomedicals ${city}`,
+    `Human Biomedicals ${city}`,
   ];
 
-  console.log(
-    `SEO Keywords ${city}:`,
-    keywords
-  );
-
   const title = district
-    ? `Maglumi Machine in ${city} | CBC Analyzer, Elisa Reader & Biomedical Products | RajBiosis`
-    : `RajBiosis | Biomedical Products, Diagnostic & Pathology Equipment in India`;
+    ? `Maglumi Machine in ${city} | CBC Analyzer, Elisa Reader & Biomedical Products | Human Biomedicals`
+    : `Human Biomedicals | Biomedical Products, Diagnostic & Pathology Equipment in India`;
 
   const description =
     district
       ? `Buy Maglumi machines, CBC analyzers, Elisa readers, pathology lab equipment, diagnostic machines and biomedical products in ${city}. Trusted supplier for hospitals, clinics & laboratories.`
-      : `RajBiosis supplies biomedical products, pathology lab equipment, CBC analyzers, Elisa readers, hospital and diagnostic machines across India.`;
+      : `Human Biomedicals supplies biomedical products, pathology lab equipment, CBC analyzers, Elisa readers, hospital and diagnostic machines across India.`;
 
   const url = district
     ? `https://rajbiosis.com/${district}`
@@ -119,7 +122,7 @@ export async function generateMetadata({
       description,
       url,
       siteName:
-        "RajBiosis",
+        "Human Biomedicals",
       locale:
         "en_IN",
       type:
@@ -132,7 +135,7 @@ export async function generateMetadata({
           width: 1200,
           height: 630,
           alt:
-            `RajBiosis Biomedical Products ${city}`,
+            `Human Biomedicals Products ${city}`,
         },
       ],
     },
@@ -164,4 +167,43 @@ export async function generateMetadata({
       },
     },
   };
+}
+
+export default async function DistrictPage({
+  params,
+}) {
+
+  const resolvedParams =
+    await params;
+
+  const district =
+    resolvedParams?.district || "";
+
+  const city = district
+    ? district
+      .replace(/-/g, " ")
+      .replace(
+        /\b\w/g,
+        (char) =>
+          char.toUpperCase()
+      )
+    : "India";
+
+  return (
+    <>
+      <Hero city={city} />
+
+      <Stats />
+
+      <WhyChoose />
+
+      {/* <ProductShowcase /> */}
+
+      <Testimonials />
+
+      {/* <FAQ /> */}
+
+      {/* <Newsletter /> */}
+    </>
+  );
 }

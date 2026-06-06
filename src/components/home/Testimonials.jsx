@@ -7,7 +7,7 @@ export default function Testimonials() {
       name: "Dr. Sharma",
       role: "Senior Pathologist",
       text:
-        "RajBiosis has consistently delivered premium biomedical products with outstanding quality and timely support.",
+        "Human Biomedicals has consistently delivered premium biomedical products with outstanding quality and timely support.",
     },
     {
       name: "Amit Verma",
@@ -43,7 +43,7 @@ export default function Testimonials() {
 
             Hospitals, laboratories and
             healthcare professionals trust
-            RajBiosis for quality biomedical
+            Human Biomedicals for quality biomedical
             products and excellent support.
 
           </p>
@@ -55,41 +55,41 @@ export default function Testimonials() {
           {testimonials.map(
             (item, i) => (
 
-            <div
-              key={i}
-              className="testimonial-card"
-            >
+              <div
+                key={i}
+                className="testimonial-card"
+              >
 
-              <div className="stars">
-                ★★★★★
-              </div>
+                <div className="stars">
+                  ★★★★★
+                </div>
 
-              <p className="testimonial-desc">
+                <p className="testimonial-desc">
 
-                {item.text}
+                  {item.text}
 
-              </p>
+                </p>
 
-              <div className="testimonial-user">
+                <div className="testimonial-user">
 
-                <div className="testimonial-avatar" />
+                  <div className="testimonial-avatar" />
 
-                <div>
+                  <div>
 
-                  <h4 className="testimonial-name">
-                    {item.name}
-                  </h4>
+                    <h4 className="testimonial-name">
+                      {item.name}
+                    </h4>
 
-                  <p className="testimonial-role">
-                    {item.role}
-                  </p>
+                    <p className="testimonial-role">
+                      {item.role}
+                    </p>
+
+                  </div>
 
                 </div>
 
               </div>
-
-            </div>
-          ))}
+            ))}
 
         </div>
 

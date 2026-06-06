@@ -19,7 +19,7 @@ export default function TrustBadges() {
     },
     {
       icon: "🌍",
-      title: "Global Standards",
+      title: "Human Biomedicals Standards",
       desc: "Products aligned with international healthcare standards.",
     },
   ];
@@ -31,11 +31,11 @@ export default function TrustBadges() {
           <span className="trust-subtitle">TRUST & QUALITY</span>
 
           <h2 className="trust-title">
-            Why Healthcare Industry Trusts RajBiosis
+            Why Healthcare Industry Trusts Human Biomedicals
           </h2>
 
           <p className="trust-text">
-            RajBiosis delivers trusted biomedical products with innovation,
+            Human Biomedicals delivers trusted biomedical products with innovation,
             reliability and healthcare excellence.
           </p>
         </div>

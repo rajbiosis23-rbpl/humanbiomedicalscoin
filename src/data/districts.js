@@ -23,7 +23,7 @@ export async function generateMetadata({ params }) {
     );
 
   return {
-    title: `Diagnostic Lab in ${city} | Global Biomedical`,
+    title: `Diagnostic Lab in ${city} | Human Biomedicals`,
     description: `Best diagnostic lab services in ${city}. Medical equipment, analyzers, reagents and healthcare solutions.`,
 
     keywords: [

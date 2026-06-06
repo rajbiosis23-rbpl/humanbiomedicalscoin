@@ -23,8 +23,8 @@ export default function AboutPage({
     {
       title: "Why Choose Us",
       description: city
-        ? `Global Biomedical delivers premium biomedical products and healthcare solutions in ${city} for hospitals and laboratories.`
-        : "Global Biomedical delivers premium biomedical products and healthcare solutions for hospitals and laboratories across India."
+        ? `Human Biomedicals delivers premium biomedical products and healthcare solutions in ${city} for hospitals and laboratories.`
+        : "Human Biomedicals delivers premium biomedical products and healthcare solutions for hospitals and laboratories across India."
     }
   ];
 
@@ -40,7 +40,7 @@ export default function AboutPage({
             <div>
 
               <span className="section-subtitle">
-                ABOUT GLOBAL BIOMEDICAL
+                ABOUT Human BIOMEDICALS
               </span>
 
               <h1 className="about-title mt-6">
@@ -81,7 +81,7 @@ export default function AboutPage({
 
               <p className="about-desc">
 
-                Global Biomedical
+                Human Biomedicals
                 is a trusted biomedical
                 products company
                 delivering innovative
@@ -116,8 +116,8 @@ export default function AboutPage({
                 src={aboutimage}
                 alt={
                   city
-                    ? `About Global Biomedical in ${city}`
-                    : "About Global Biomedical Across India"
+                    ? `About Human Biomedicals in ${city}`
+                    : "About Human Biomedicals Across India"
                 }
                 width={700}
                 height={700}
@@ -139,7 +139,7 @@ export default function AboutPage({
           <div className="text-center">
 
             <span className="section-subtitle">
-              WHY GLOBAL BIOMEDICAL
+              WHY HUMAN BIOMEDICALS
             </span>
 
             <h2 className="section-title mt-4">
