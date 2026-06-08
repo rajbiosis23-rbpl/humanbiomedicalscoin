@@ -3,14 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import "./navbar.css";
 
 export default function Navbar() {
-  const pathname =
-    usePathname();
+  const pathname = usePathname();
+  const [menuOpen, setMenuOpen] =
+    useState(false);
 
   const firstSegment =
     pathname.split("/")[1];
+
   const staticRoutes = [
     "",
     "about",
@@ -26,47 +29,38 @@ export default function Navbar() {
       ? firstSegment
       : "";
 
-  const basePath =
-    district
-      ? `/${district}`
-      : "";
+  const basePath = district
+    ? `/${district}`
+    : "";
 
   const navLinks = [
     {
       name: "Home",
-      path:
-        `${basePath}/`,
+      path: `${basePath}/`,
     },
     {
       name: "About",
-      path:
-        `${basePath}/about`,
+      path: `${basePath}/about`,
     },
     {
       name: "Products",
-      path:
-        `${basePath}/items`,
+      path: `${basePath}/items`,
     },
     {
       name: "Services",
-      path:
-        `${basePath}/services`,
+      path: `${basePath}/services`,
     },
     {
       name: "Contact",
-      path:
-        `${basePath}/contact`,
+      path: `${basePath}/contact`,
     },
   ];
 
   return (
     <header className="navbar">
       <nav className="container-custom navbar-container">
-
         <Link
-          href={
-            basePath || "/"
-          }
+          href={basePath || "/"}
           className="navbar-logo"
         >
           <Image
@@ -79,18 +73,22 @@ export default function Navbar() {
           />
         </Link>
 
-        <div className="nav-links">
-          {navLinks.map(
-            (link) => (
-              <Link
-                key={link.path}
-                href={link.path}
-                className="nav-link"
-              >
-                {link.name}
-              </Link>
-            )
-          )}
+        <div
+          className={`nav-links ${menuOpen ? "active" : ""
+            }`}
+        >
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              href={link.path}
+              className="nav-link"
+              onClick={() =>
+                setMenuOpen(false)
+              }
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
 
         <Link
@@ -100,10 +98,15 @@ export default function Navbar() {
           Contact Us
         </Link>
 
-        <div className="mobile-menu">
-          ☰
-        </div>
-
+        <button
+          className="mobile-menu"
+          onClick={() =>
+            setMenuOpen(!menuOpen)
+          }
+          aria-label="Toggle Menu"
+        >
+          {menuOpen ? "✕" : "☰"}
+        </button>
       </nav>
     </header>
   );

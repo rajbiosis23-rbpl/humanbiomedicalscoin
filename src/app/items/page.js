@@ -33,25 +33,25 @@ export default function ProductsPage({
   const [page, setPage] =
     useState(1);
 
-  const [selectedProduct,
-    setSelectedProduct
-  ] = useState(null);
+  // const [selectedProduct,
+  //   setSelectedProduct
+  // ] = useState(null);
 
   // ENQUIRY FORM
-  const [name, setName] =
-    useState("");
+  // const [name, setName] =
+  //   useState("");
 
-  const [phone, setPhone] =
-    useState("");
+  // const [phone, setPhone] =
+  //   useState("");
 
-  const [email, setEmail] =
-    useState("");
+  // const [email, setEmail] =
+  //   useState("");
 
   // const [message, setMessage] =
   //   useState("");
 
-  const [loading, setLoading] =
-    useState(false);
+  // const [loading, setLoading] =
+  //   useState(false);
 
   const start =
     (page - 1) *
@@ -71,77 +71,80 @@ export default function ProductsPage({
     );
 
   // SUBMIT ENQUIRY
-  const submitEnquiry = async () => {
+  // const submitEnquiry = async () => {
 
-    if (!name.trim()) {
-      toast.error("Please enter your name");
-      return;
-    }
+  //   if (!name.trim()) {
+  //     toast.error("Please enter your name");
+  //     return;
+  //   }
 
-    const emailRegex =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   const emailRegex =
+  //     /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (email && !emailRegex.test(email)) {
-      toast.error("Please enter a valid email");
-      return;
-    }
+  //   if (email && !emailRegex.test(email)) {
+  //     toast.error("Please enter a valid email");
+  //     return;
+  //   }
 
-    if (!/^\d{10}$/.test(phone)) {
-      toast.error(
-        "Phone number must be exactly 10 digits"
-      );
-      return;
-    }
+  //   if (!/^\d{10}$/.test(phone)) {
+  //     toast.error(
+  //       "Phone number must be exactly 10 digits"
+  //     );
+  //     return;
+  //   }
 
-    try {
+  //   try {
 
-      setLoading(true);
+  //     setLoading(true);
 
-      await addDoc(
-        collection(
-          db,
-          "websitesQueries",
-          "humanbiomedicalscoin",
-          "productQueries"
-        ),
-        {
-          productName:
-            selectedProduct?.title,
+  //     await addDoc(
+  //       collection(
+  //         db,
+  //         "websitesQueries",
+  //         "humanbiomedicalscoin",
+  //         "productQueries"
+  //       ),
+  //       {
+  //         productName:
+  //           selectedProduct?.title,
 
-          city,
+  //         city,
 
-          name,
-          phone,
-          email,
+  //         name,
+  //         phone,
+  //         email,
 
-          createdAt:
-            serverTimestamp(),
-        }
-      );
+  //         createdAt:
+  //           serverTimestamp(),
+  //       }
+  //     );
 
-      toast.success(
-        "Enquiry Sent Successfully"
-      );
+  //     toast.success(
+  //       "Enquiry Sent Successfully"
+  //     );
 
-      setName("");
-      setPhone("");
-      setEmail("");
+  //     setName("");
+  //     setPhone("");
+  //     setEmail("");
 
-    } catch (error) {
+  //   } catch (error) {
 
-      console.log(error);
+  //     console.log(error);
 
-      toast.error(
-        "Failed To Send Enquiry"
-      );
+  //     toast.error(
+  //       "Failed To Send Enquiry"
+  //     );
 
-    } finally {
+  //   } finally {
 
-      setLoading(false);
+  //     setLoading(false);
 
-    }
-  };
-
+  //   }
+  // };
+  const basePath =
+    city && city !== "India"
+      ? `/${city.toLowerCase()}`
+      : "";
   useEffect(() => {
 
     const fetchProducts =
@@ -250,17 +253,17 @@ export default function ProductsPage({
                 <div className="product-content">
 
                   <p className="product-category">
-                    {product.brand}
+                    Brand: {product.brand}
                   </p>
 
                   <h3 className="product-title">
-                    {product.title}
+                    Product: {product.title}
                   </h3>
 
                   {/* <p className="product-desc">
                     {product.desc}
                   </p> */}
-
+                  {/* 
                   <button
                     className="view-btn"
                     onClick={() =>
@@ -268,7 +271,16 @@ export default function ProductsPage({
                     }
                   >
                     View Details
-                  </button>
+                  </button> */}
+                  <Link
+                    href={`${basePath}/items/${product.title
+                      .toLowerCase()
+                      .replace(/[^a-z0-9\s-]/g, "")
+                      .replace(/\s+/g, "-")}`}
+                    className="view-btn"
+                  >
+                    View Details
+                  </Link>
 
                 </div>
 
@@ -302,143 +314,6 @@ export default function ProductsPage({
 
       </div>
 
-      {/* MODAL */}
-      {selectedProduct && (
-
-        <div className="modal-overlay">
-
-          <div className="modal-box">
-
-            {/* CLOSE */}
-            <button
-              className="close-btn"
-              onClick={() =>
-                setSelectedProduct(null)
-              }
-            >
-              ✕
-            </button>
-
-            <div className="modal-grid">
-
-              {/* LEFT IMAGE */}
-              <div className="modal-left">
-
-                <img
-                  src={
-                    selectedProduct.image ||
-                    "https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=800"
-                  }
-                  alt={selectedProduct.title}
-                  className="modal-image"
-                />
-
-              </div>
-
-              {/* RIGHT CONTENT */}
-              <div className="modal-right">
-
-                <span className="modal-category">
-                  {selectedProduct.brand}
-                </span>
-
-                <h2 className="modal-title">
-                  {selectedProduct.title}
-                </h2>
-
-                <p className="modal-description">
-                  {selectedProduct.details}
-                </p>
-
-                {/* ENQUIRY CARD */}
-                <div className="enquiry-card">
-
-                  <h3 className="enquiry-title">
-                    Send Query
-                  </h3>
-
-                  <p className="enquiry-subtitle">
-                    Fill the form and our team
-                    will contact you shortly.
-                  </p>
-
-                  <div className="form-grid">
-
-                    <input
-                      type="text"
-                      placeholder="Your Name"
-                      value={name}
-                      onChange={(e) =>
-                        setName(
-                          e.target.value.replace(
-                            /[^a-zA-Z\s]/g,
-                            ""
-                          )
-                        )
-                      }
-                      className="enquiry-input"
-                      maxLength={50}
-                    />
-
-
-
-
-                    <input
-                      type="text"
-                      placeholder="Phone Number"
-                      value={phone}
-                      maxLength={10}
-                      onChange={(e) =>
-                        setPhone(
-                          e.target.value.replace(/\D/g, "")
-                        )
-                      }
-                      className="enquiry-input"
-                    />
-
-                  </div>
-
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    value={email}
-                    onChange={(e) =>
-                      setEmail(e.target.value)
-                    }
-                    className="enquiry-input full"
-                  />
-
-                  {/* <textarea
-                    placeholder="Write Your Message..."
-                    value={message}
-                    onChange={(e) =>
-                      setMessage(e.target.value)
-                    }
-                    className="enquiry-textarea"
-                  /> */}
-
-                  <button
-                    className="send-btn"
-                    onClick={submitEnquiry}
-                    disabled={loading}
-                  >
-
-                    {loading
-                      ? "Sending..."
-                      : "Send Enquiry"}
-
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
 
     </main>
   );

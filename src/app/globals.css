@@ -1,63 +1,111 @@
 @import "tailwindcss";
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-html{
-  scroll-behavior:smooth;
+html {
+  scroll-behavior: smooth;
 }
 
-body{
-  background:#fff8f2;
-  color:#1c1c1c;
-  overflow-x:hidden;
-  font-family:Arial, Helvetica, sans-serif;
+body {
+  background: #fff8f2;
+  color: #1c1c1c;
+  overflow-x: hidden;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.container-custom{
-  width:100%;
-  max-width:1600px;
-  margin:auto;
-  padding-inline:80px;
+/* =========================
+   Container
+========================= */
+
+.container-custom {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-inline: 80px;
 }
 
-.gradient-text{
-  background:linear-gradient(
-    90deg,
-    #9b111e,
-    #f4b400
-  );
+/* =========================
+   Typography
+========================= */
 
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+.gradient-text {
+  background: linear-gradient(90deg,
+      #9b111e,
+      #f4b400);
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.section-title{
-  font-size:68px;
-  line-height:82px;
-  font-weight:800;
+.section-title {
+  font-size: 68px;
+  line-height: 82px;
+  font-weight: 800;
 }
 
-.section-subtitle{
-  color:#9b111e;
-  font-size:18px;
-  font-weight:700;
-  letter-spacing:3px;
-  text-transform:uppercase;
+.section-subtitle {
+  color: #9b111e;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
 }
 
-@media(max-width:991px){
+/* =========================
+   Laptop
+========================= */
 
-.container-custom{
-  padding-inline:24px;
+@media (max-width: 1200px) {
+  .container-custom {
+    padding-inline: 50px;
+  }
+
+  .section-title {
+    font-size: 58px;
+    line-height: 72px;
+  }
 }
 
-.section-title{
-  font-size:42px;
-  line-height:52px;
+/* =========================
+   Tablet
+========================= */
+
+@media (max-width: 991px) {
+  .container-custom {
+    padding-inline: 24px;
+  }
+
+  .section-title {
+    font-size: 48px;
+    line-height: 60px;
+  }
+
+  .section-subtitle {
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
 }
 
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 576px) {
+  .container-custom {
+    padding-inline: 16px;
+  }
+
+  .section-title {
+    font-size: 36px;
+    line-height: 46px;
+  }
+
+  .section-subtitle {
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
 }

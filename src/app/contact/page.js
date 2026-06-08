@@ -50,7 +50,8 @@ export default function ContactPage({
 
   const [loading, setLoading] =
     useState(false);
-
+  const lat = "26.8952";
+  const lng = "75.7453";
   // FORMAT CITY
   const formattedCity =
     city
@@ -478,12 +479,10 @@ export default function ContactPage({
           <div className="map-box">
 
             <iframe
-              src={`https://maps.google.com/maps?q=${finalAddress}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+              src={`https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`}
               width="100%"
               height="100%"
-              style={{
-                border: 0,
-              }}
+              style={{ border: 0 }}
               loading="lazy"
             />
 
