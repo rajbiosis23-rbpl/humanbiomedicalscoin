@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "clsx": "^2.1.1",
     "firebase": "^12.13.0",
+    "firebase-admin": "^13.10.0",
     "framer-motion": "^12.39.0",
     "next": "16.2.6",
     "next-sitemap": "^4.2.3",
