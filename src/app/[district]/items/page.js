@@ -111,7 +111,7 @@ export async function generateMetadata({
 
     alternates: {
       canonical:
-        `https://rajbiosis.com/${district}/items`,
+        `https://humanbiomedicals.co.in/${district}/items`,
     },
 
     openGraph: {
@@ -122,7 +122,7 @@ export async function generateMetadata({
         `Top biomedical products, Maglumi machines, pathology lab and diagnostic equipment supplier in ${city}.`,
 
       url:
-        `https://rajbiosis.com/${district}/items`,
+        `https://humanbiomedicals.co.in/${district}/items`,
 
       siteName:
         "Human Biomedicals",

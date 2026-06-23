@@ -1,39 +1,44 @@
 import admin from "firebase-admin";
 
-const serviceAccount = {
-  projectId:
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+let adminDb = null;
 
-  clientEmail:
-    process.env.FIREBASE_CLIENT_EMAIL,
+// const projectId =
+//   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+const projectId =
+  process.env.FIREBASE_PROJECT_ID;
 
-  privateKey:
-    process.env.FIREBASE_PRIVATE_KEY?.replace(
-      /\\n/g,
-      "\n"
-    ),
-};
+const clientEmail =
+  process.env.FIREBASE_CLIENT_EMAIL;
+
+const privateKey =
+  process.env.FIREBASE_PRIVATE_KEY?.replace(
+    /\\n/g,
+    "\n"
+  );
 
 console.log("ENV CHECK:", {
-  projectId:
-    process.env
-      .NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-
-  clientEmail:
-    process.env
-      .FIREBASE_CLIENT_EMAIL,
+  projectId,
+  clientEmail,
+  hasPrivateKey: !!privateKey,
 });
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential:
-      admin.credential.cert(
-        serviceAccount
-      ),
-  });
-}
+if (
+  projectId &&
+  clientEmail &&
+  privateKey
+) {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential:
+        admin.credential.cert({
+          projectId: String(projectId),
+          clientEmail: String(clientEmail),
+          privateKey: String(privateKey),
+        })
+    });
+  }
 
-const adminDb =
-  admin.firestore();
+  adminDb = admin.firestore();
+}
 
 export { adminDb };

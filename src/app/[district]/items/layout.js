@@ -1,9 +1,13 @@
 export async function generateMetadata({
   params,
 }) {
+
+  const resolvedParams =
+    await params;
+
   const district =
     decodeURIComponent(
-      params.district
+      resolvedParams.district
     )
       .replace(/-/g, " ")
       .replace(
@@ -13,12 +17,14 @@ export async function generateMetadata({
       );
 
   const slug =
-    params.district;
+    resolvedParams.district;
 
   return {
-    title: `Biomedical Products in ${district} | Diagnostic & Laboratory Equipment | Human Biomedicals`,
+    title:
+      `Biomedical Products in ${district} | Diagnostic & Laboratory Equipment | Human Biomedicals`,
 
-    description: `Buy biomedical, pathology, diagnostic machines, CBC machines, laboratory and hospital equipment in ${district}. Trusted supplier with installation, support & best pricing from Human Biomedicals.`,
+    description:
+      `Buy biomedical, pathology, diagnostic machines, CBC machines, laboratory and hospital equipment in ${district}. Trusted supplier with installation, support & best pricing from Human Biomedicals.`,
 
     keywords: [
       `Biomedical Products in ${district}`,
@@ -30,7 +36,7 @@ export async function generateMetadata({
       `Pathology Equipment in ${district}`,
       `Biomedical Supplier India`,
       `Diagnostic Machine Supplier`,
-      `Human Biomedicals`
+      `Human Biomedicals`,
     ],
 
     robots: {
@@ -39,39 +45,59 @@ export async function generateMetadata({
     },
 
     alternates: {
-      canonical: `https://globalbiomedical.org/${slug}/items`,
+      canonical:
+        `https://humanbiomedicals.co.in/${slug}/items`,
     },
 
     openGraph: {
-      title: `Biomedical Products in ${district} | Huamn Biomedicals`,
-      description: `Trusted supplier of biomedical, pathology, laboratory & diagnostic equipment in ${district}.`,
-      url: `https://globalbiomedical.org/${slug}/items`,
-      siteName: "Human Biomedicals",
-      locale: "en_IN",
-      type: "website",
+      title:
+        `Biomedical Products in ${district} | Human Biomedicals`,
+
+      description:
+        `Trusted supplier of biomedical, pathology, laboratory & diagnostic equipment in ${district}.`,
+
+      url:
+        `https://humanbiomedicals.co.in/${slug}/items`,
+
+      siteName:
+        "Human Biomedicals",
+
+      locale:
+        "en_IN",
+
+      type:
+        "website",
 
       images: [
         {
           url: "/logo.png",
           width: 1200,
           height: 630,
-          alt: `Biomedical Products in ${district}`,
+          alt:
+            `Biomedical Products in ${district}`,
         },
       ],
     },
 
     twitter: {
-      card: "summary_large_image",
-      title: `Biomedical Products in ${district} | Human Biomedicals`,
-      description: `Trusted biomedical equipment supplier in ${district}.`,
-      images: ["/logo.png"],
+      card:
+        "summary_large_image",
+
+      title:
+        `Biomedical Products in ${district} | Human Biomedicals`,
+
+      description:
+        `Trusted biomedical equipment supplier in ${district}.`,
+
+      images: [
+        "/logo.png",
+      ],
     },
   };
 }
 
-// YE ADD KARNA IMPORTANT HAI
 export default function Layout({
   children,
 }) {
-  return <>{children}</>;
+  return children;
 }

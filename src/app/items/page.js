@@ -28,7 +28,7 @@ export default function ProductsPage({
 
   const [products, setProducts] = useState([]);
 
-  const productsPerPage = 25;
+  const productsPerPage = 20;
 
   const [page, setPage] =
     useState(1);

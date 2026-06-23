@@ -14,7 +14,7 @@ export default async function sitemap() {
           "websites"
         )
         .doc(
-          "globalbiomedicalorg"
+          "humanbiomedicalscoin"
         )
         .collection("districts")
         .get();
@@ -31,7 +31,7 @@ export default async function sitemap() {
           "websites"
         )
         .doc(
-          "globalbiomedicalsin"
+          "humanbiomedicalscoin"
         )
         .collection("pages")
         .doc("products")

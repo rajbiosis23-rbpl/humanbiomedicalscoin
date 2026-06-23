@@ -12,44 +12,78 @@ export const metadata = {
 
   title: {
     default:
-      "Human Biomedicals Diagnostic Equipment Products",
-    template: "%s | Human Biomedicals",
+      "Raj Biosis | Biomedical, Laboratory & Diagnostic Equipment Supplier India",
+    template:
+      "%s | Raj Biosis",
   },
 
   description:
-    "Human Biomedicals provides premium biomedical products, laboratory solutions, diagnostic equipment and healthcare innovations.",
+    "Raj Biosis is a trusted supplier of biomedical equipment, laboratory instruments, diagnostic systems, pathology analyzers and healthcare solutions across India.",
 
   keywords: [
-    "Biomedical Products India",
-    "Healthcare Equipment",
-    "Laboratory Equipment",
-    "Diagnostic Solutions",
+    "Biomedical Equipment India",
+    "Laboratory Equipment Supplier",
+    "Diagnostic Equipment",
+    "Pathology Analyzer",
+    "Hospital Equipment",
     "Medical Devices India",
-    "Human Biomedicals Diagnostic Equipment"
+    "Healthcare Solutions",
+    "Raj Biosis",
   ],
+
+  authors: [
+    {
+      name: "Raj Biosis",
+    },
+  ],
+
+  creator: "Raj Biosis",
+  publisher: "Raj Biosis",
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+
+  alternates: {
+    canonical:
+      "https://www.rajbiosis.com",
+  },
 
   openGraph: {
     title:
-      "Human Biomedicals Diagnostic Equipment Products",
+      "Raj Biosis | Biomedical & Diagnostic Equipment Supplier",
 
     description:
-      "Premium biomedical products and healthcare innovations.",
+      "Premium biomedical products, laboratory instruments, diagnostic analyzers and healthcare solutions across India.",
 
     url:
       "https://www.rajbiosis.com",
 
-    siteName: "RajBiosis",
+    siteName:
+      "Raj Biosis",
+
+    locale:
+      "en_IN",
+
+    type:
+      "website",
 
     images: [
       {
         url: "/images/logo.png",
         width: 1200,
         height: 630,
+        alt: "Raj Biosis",
       },
     ],
-
-    locale: "en_US",
-    type: "website",
   },
 
   twitter: {
@@ -57,25 +91,18 @@ export const metadata = {
       "summary_large_image",
 
     title:
-      "Human Biomedicals Diagnostic Equipment Products",
+      "Raj Biosis | Biomedical Equipment Supplier",
 
     description:
-      "Premium biomedical solutions.",
+      "Trusted supplier of biomedical, laboratory and diagnostic equipment in India.",
 
     images: [
-      "/og-image.jpg"
+      "/images/logo.png",
     ],
   },
 
-  robots: {
-    index: true,
-    follow: true,
-  },
-
-  alternates: {
-    canonical:
-      "https://www.rajbiosis.com",
-  },
+  category:
+    "Medical Equipment",
 };
 
 export default function RootLayout({

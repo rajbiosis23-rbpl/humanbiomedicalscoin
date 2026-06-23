@@ -26,83 +26,86 @@ export async function generateMetadata({
       )
     : "India";
 
-  // SEO KEYWORDS
+  const title = district
+    ? `Biomedical Equipment Supplier in ${city} | Maglumi, CBC Analyzer & Elisa Reader`
+    : `Human Biomedicals | Biomedical Equipment Supplier in India`;
+
+  const description =
+    district
+      ? `Human Biomedicals is a trusted biomedical equipment supplier in ${city}. We provide Maglumi machines, CBC analyzers, Elisa readers, pathology laboratory equipment, hospital instruments and diagnostic machines for laboratories, hospitals and healthcare facilities.`
+      : `Human Biomedials supplies biomedical products, pathology lab equipment, CBC analyzers, Elisa readers, hospital equipment and diagnostic machines across India.`;
+
   const keywords = [
 
-    // Main Biomedical
+    // Biomedical
+    `biomedical equipment supplier in ${city}`,
     `biomedical products in ${city}`,
-    `biomedical supplier in ${city}`,
     `biomedical equipment in ${city}`,
-    `best biomedical company in ${city}`,
+    `biomedical company in ${city}`,
+    `medical equipment supplier in ${city}`,
+
+    // Diagnostic
+    `diagnostic equipment supplier in ${city}`,
+    `diagnostic machines in ${city}`,
+    `diagnostic lab equipment in ${city}`,
+
+    // Pathology
+    `pathology equipment in ${city}`,
+    `pathology lab equipment in ${city}`,
+    `pathology machine supplier in ${city}`,
+    `pathology machine dealer in ${city}`,
+
+    // Hospital
+    `hospital equipment supplier in ${city}`,
+    `hospital machines in ${city}`,
+    `medical devices in ${city}`,
+
+    // Laboratory
+    `laboratory equipment in ${city}`,
+    `lab equipment supplier in ${city}`,
+    `lab instruments in ${city}`,
+    `medical lab equipment in ${city}`,
 
     // Maglumi
     `maglumi machine in ${city}`,
-    `maglumi supplier ${city}`,
-    `maglumi machine price ${city}`,
-    `maglumi distributor ${city}`,
-    `maglumi diagnostic machine ${city}`,
+    `maglumi supplier in ${city}`,
+    `maglumi distributor in ${city}`,
+    `maglumi machine price in ${city}`,
+    `maglumi diagnostic machine in ${city}`,
 
     // CBC
-    `cbc machine in ${city}`,
     `cbc analyzer in ${city}`,
-    `cbc machine supplier ${city}`,
-    `blood testing machine ${city}`,
+    `cbc machine in ${city}`,
+    `cbc machine supplier in ${city}`,
+    `cbc analyzer dealer in ${city}`,
+    `blood testing machine in ${city}`,
 
     // Elisa
     `elisa reader in ${city}`,
     `elisa machine in ${city}`,
     `elisa washer in ${city}`,
 
-    // Pathology
-    `pathology equipment in ${city}`,
-    `pathology lab equipment in ${city}`,
-    `pathology machine supplier ${city}`,
-    `pathology products ${city}`,
-
-    // Hospital
-    `hospital equipment in ${city}`,
-    `hospital machines in ${city}`,
-    `medical devices in ${city}`,
-    `medical machine supplier ${city}`,
-
-    // Lab
-    `laboratory equipment in ${city}`,
-    `lab instruments in ${city}`,
-    `medical lab equipment ${city}`,
-    `diagnostic lab products ${city}`,
-
     // Analyzer
-    `biochemistry analyzer ${city}`,
-    `hematology analyzer ${city}`,
-    `chemistry analyzer ${city}`,
-    `fully automatic analyzer ${city}`,
-    `semi auto analyzer ${city}`,
+    `biochemistry analyzer in ${city}`,
+    `hematology analyzer in ${city}`,
+    `chemistry analyzer in ${city}`,
+    `fully automatic analyzer in ${city}`,
+    `semi auto analyzer in ${city}`,
 
     // Intent
-    `best diagnostic equipment supplier ${city}`,
-    `best pathology supplier ${city}`,
-    `hospital lab equipment ${city}`,
+    `best biomedical supplier in ${city}`,
+    `best pathology supplier in ${city}`,
+    `best diagnostic equipment supplier in ${city}`,
     `medical equipment near me ${city}`,
     `diagnostic machines near me ${city}`,
-    `pathology machine dealer ${city}`,
 
     // Brand
     `Human Biomedicals ${city}`,
-    `Human Biomedicals ${city}`,
   ];
 
-  const title = district
-    ? `Maglumi Machine in ${city} | CBC Analyzer, Elisa Reader & Biomedical Products | Human Biomedicals`
-    : `Human Biomedicals | Biomedical Products, Diagnostic & Pathology Equipment in India`;
-
-  const description =
-    district
-      ? `Buy Maglumi machines, CBC analyzers, Elisa readers, pathology lab equipment, diagnostic machines and biomedical products in ${city}. Trusted supplier for hospitals, clinics & laboratories.`
-      : `Human Biomedicals supplies biomedical products, pathology lab equipment, CBC analyzers, Elisa readers, hospital and diagnostic machines across India.`;
-
   const url = district
-    ? `https://rajbiosis.com/${district}`
-    : "https://rajbiosis.com";
+    ? `https://humanbiomedials.co.in/${district}`
+    : `https://humanbiomedials.co.in`;
 
   return {
     title,
@@ -110,7 +113,7 @@ export async function generateMetadata({
     keywords,
 
     metadataBase: new URL(
-      "https://rajbiosis.com"
+      "https://humanbiomedials.co.in"
     ),
 
     alternates: {
@@ -122,20 +125,17 @@ export async function generateMetadata({
       description,
       url,
       siteName:
-        "Human Biomedicals",
-      locale:
-        "en_IN",
-      type:
-        "website",
+        "Human Biomedials",
+      locale: "en_IN",
+      type: "website",
 
       images: [
         {
-          url:
-            "/images/logo.png",
+          url: "/images/logo.png",
           width: 1200,
           height: 630,
           alt:
-            `Human Biomedicals Products ${city}`,
+            `Biomedical Equipment Supplier in ${city}`,
         },
       ],
     },
@@ -158,12 +158,10 @@ export async function generateMetadata({
       googleBot: {
         index: true,
         follow: true,
-        noimageindex:
-          false,
+        noimageindex: false,
         "max-image-preview":
           "large",
-        "max-snippet":
-          -1,
+        "max-snippet": -1,
       },
     },
   };
@@ -200,6 +198,7 @@ export default async function DistrictPage({
       {/* <ProductShowcase /> */}
 
       <Testimonials />
+
 
       {/* <FAQ /> */}
 
