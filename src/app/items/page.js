@@ -1,16 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import toast, {
-  Toaster,
-} from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
-// import {
-//   addDoc,
-//   collection,
-//   serverTimestamp,
-// } from "firebase/firestore";
 import {
   addDoc,
   collection,
@@ -18,6 +11,7 @@ import {
   doc,
   getDoc,
 } from "firebase/firestore";
+
 import { db } from "@/lib/firebase";
 
 import "./product.css";
@@ -26,125 +20,63 @@ export default function ProductsPage({
   city = "India",
 }) {
 
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] =
+    useState([]);
 
-  const productsPerPage = 20;
+  const [search, setSearch] =
+    useState("");
 
   const [page, setPage] =
     useState(1);
 
-  // const [selectedProduct,
-  //   setSelectedProduct
-  // ] = useState(null);
+  const [openedCategory, setOpenedCategory] =
+    useState("");
 
-  // ENQUIRY FORM
-  // const [name, setName] =
-  //   useState("");
+  const [activeCategory, setActiveCategory] =
+    useState("");
 
-  // const [phone, setPhone] =
-  //   useState("");
+  const productsPerPage = 20;
 
-  // const [email, setEmail] =
-  //   useState("");
+  const makeSlug = (text = "") =>
+    text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-");
 
-  // const [message, setMessage] =
-  //   useState("");
-
-  // const [loading, setLoading] =
-  //   useState(false);
-
-  const start =
-    (page - 1) *
-    productsPerPage;
-
-  const currentProducts =
-    products.slice(
-      start,
-      start +
-      productsPerPage
-    );
-
-  const totalPages =
-    Math.ceil(
-      products.length /
-      productsPerPage
-    );
-
-  // SUBMIT ENQUIRY
-  // const submitEnquiry = async () => {
-
-  //   if (!name.trim()) {
-  //     toast.error("Please enter your name");
-  //     return;
-  //   }
-
-  //   const emailRegex =
-  //     /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  //   if (email && !emailRegex.test(email)) {
-  //     toast.error("Please enter a valid email");
-  //     return;
-  //   }
-
-  //   if (!/^\d{10}$/.test(phone)) {
-  //     toast.error(
-  //       "Phone number must be exactly 10 digits"
-  //     );
-  //     return;
-  //   }
-
-  //   try {
-
-  //     setLoading(true);
-
-  //     await addDoc(
-  //       collection(
-  //         db,
-  //         "websitesQueries",
-  //         "humanbiomedicalscoin",
-  //         "productQueries"
-  //       ),
-  //       {
-  //         productName:
-  //           selectedProduct?.title,
-
-  //         city,
-
-  //         name,
-  //         phone,
-  //         email,
-
-  //         createdAt:
-  //           serverTimestamp(),
-  //       }
-  //     );
-
-  //     toast.success(
-  //       "Enquiry Sent Successfully"
-  //     );
-
-  //     setName("");
-  //     setPhone("");
-  //     setEmail("");
-
-  //   } catch (error) {
-
-  //     console.log(error);
-
-  //     toast.error(
-  //       "Failed To Send Enquiry"
-  //     );
-
-  //   } finally {
-
-  //     setLoading(false);
-
-  //   }
-  // };
   const basePath =
     city && city !== "India"
       ? `/${city.toLowerCase()}`
       : "";
+
+  const getCategory = (item) => {
+
+    const title =
+      (item.title || "")
+        .toLowerCase();
+
+    if (title.includes("rapid"))
+      return "Rapid Test Kits";
+
+    if (title.includes("elisa"))
+      return "ELISA Kits";
+
+    if (title.includes("hematology"))
+      return "Hematology";
+
+    if (title.includes("electrolyte"))
+      return "Electrolyte Reagents";
+
+    if (title.includes("biochemistry"))
+      return "Biochemistry";
+
+    if (title.includes("immuno"))
+      return "Immunoassay Analyzer";
+
+    return "Other Products";
+
+  };
+
   useEffect(() => {
 
     const fetchProducts =
@@ -165,15 +97,40 @@ export default function ProductsPage({
 
           if (snap.exists()) {
 
-            const allProducts =
+            const raw =
               snap.data()
                 ?.products || [];
 
             const published =
-              allProducts.filter(
-                (item) =>
-                  item.isPublished
-              );
+              raw
+                .filter(
+                  (item) =>
+                    item.isPublished
+                )
+                .map(
+                  (
+                    item,
+                    index
+                  ) => ({
+
+                    ...item,
+
+                    uid:
+                      index,
+
+                    slug:
+                      makeSlug(
+                        item.title
+                      ),
+
+                    category:
+                      item.category ||
+                      getCategory(
+                        item
+                      ),
+
+                  })
+                );
 
             setProducts(
               published
@@ -181,25 +138,262 @@ export default function ProductsPage({
 
           }
 
-        } catch (error) {
+        } catch (err) {
 
-          console.log(error);
+          console.log(err);
 
         }
+
       };
 
     fetchProducts();
 
   }, []);
+
+  const filteredProducts =
+    useMemo(() => {
+
+      return products.filter(
+        (item) => {
+
+          const text = `
+            ${item.title}
+            ${item.brand}
+            ${item.category}
+          `.toLowerCase();
+
+          return text.includes(
+            search.toLowerCase()
+          );
+
+        }
+      );
+
+    }, [products, search]);
+
+  const groupedProducts =
+    useMemo(() => {
+
+      const obj = {};
+
+      filteredProducts.forEach(
+        (item) => {
+
+          if (
+            !obj[item.category]
+          ) {
+
+            obj[item.category] =
+              [];
+
+          }
+
+          obj[item.category].push(
+            item
+          );
+
+        }
+      );
+
+      return obj;
+
+    }, [filteredProducts]);
+
+  const categories =
+    Object.keys(
+      groupedProducts
+    );
+
+  const start =
+    (page - 1) *
+    productsPerPage;
+
+  const paginated =
+    filteredProducts.slice(
+      start,
+      start +
+        productsPerPage
+    );
+
+  const paginatedGrouped =
+    useMemo(() => {
+
+      const obj = {};
+
+      paginated.forEach(
+        (item) => {
+
+          if (
+            !obj[item.category]
+          ) {
+
+            obj[item.category] =
+              [];
+
+          }
+
+          obj[item.category].push(
+            item
+          );
+
+        }
+      );
+
+      return obj;
+
+    }, [paginated]);
+
+  const totalPages =
+    Math.ceil(
+      filteredProducts.length /
+        productsPerPage
+    );
+
+  const toggleCategory = (
+    category
+  ) => {
+
+    if (
+      openedCategory ===
+      category
+    ) {
+
+      setOpenedCategory("");
+
+      setActiveCategory("");
+
+      return;
+
+    }
+
+    setOpenedCategory(
+      category
+    );
+
+    setActiveCategory(
+      category
+    );
+
+  };
+
+const scrollToProduct = (slug, category) => {
+
+  if (openedCategory !== category) {
+
+    setOpenedCategory(category);
+    setActiveCategory(category);
+
+    setTimeout(() => {
+
+      const el = document.getElementById(slug);
+
+      if (el) {
+
+        el.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+
+      }
+
+    }, 350); // accordion animation complete hone ka wait
+
+    return;
+
+  }
+
+  const el = document.getElementById(slug);
+
+  if (el) {
+
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+
+  }
+
+};
+
+  useEffect(() => {
+
+    const handleScroll =
+      () => {
+
+        let current = "";
+
+        categories.forEach(
+          (
+            category
+          ) => {
+
+            const section =
+              document.getElementById(
+
+                category
+                  .replace(
+                    /\s+/g,
+                    "-"
+                  )
+                  .toLowerCase()
+
+              );
+
+            if (!section)
+              return;
+
+            const top =
+              section.getBoundingClientRect()
+                .top;
+
+            if (
+              top <= 180
+            ) {
+
+              current =
+                category;
+
+            }
+
+          }
+        );
+
+        if (
+          current &&
+          current !==
+            activeCategory
+        ) {
+
+          setActiveCategory(
+            current
+          );
+
+        }
+
+      };
+
+    window.addEventListener(
+      "scroll",
+      handleScroll
+    );
+
+    return () =>
+      window.removeEventListener(
+        "scroll",
+        handleScroll
+      );
+
+  }, [
+    categories,
+    activeCategory,
+  ]);
+
   return (
 
     <main className="products-page">
 
       <Toaster
         position="top-right"
-        containerStyle={{
-          zIndex: 999999,
-        }}
       />
 
       <div className="container-custom">
@@ -214,107 +408,443 @@ export default function ProductsPage({
 
           <h1 className="products-title mt-4">
 
-            Biomedical Products
-            in {city}
+            Biomedical Products in {city}
 
           </h1>
 
           <p className="products-desc">
 
-            Explore advanced
-            biomedical solutions
-            trusted by hospitals
-            and laboratories in{" "}
-            <strong>{city}</strong>
+            Explore advanced biomedical solutions trusted by hospitals.
 
           </p>
 
         </div>
 
-        <div className="products-grid">
+        <div className="products-wrapper">
 
-          {currentProducts.map(
-            (product) => (
+          <div className="category-sidebar">
+                      {/* =========================
+                LEFT SIDEBAR
+          ========================= */}
 
-              <div
-                key={product.id}
-                className="product-card"
-              >
+          <div className="category-sidebar">
 
-                <img
-                  src={
-                    product.image ||
-                    "https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=800"
-                  }
-                  alt={`${product.title} in ${city}`}
-                  className="product-image"
-                />
+            <div className="sidebar-title">
 
-                <div className="product-content">
+              Categories
 
-                  <p className="product-category">
-                    Brand: {product.brand}
-                  </p>
+            </div>
 
-                  <h3 className="product-title">
-                    Product: {product.title}
-                  </h3>
+            <div className="sidebar-search">
 
-                  {/* <p className="product-desc">
-                    {product.desc}
-                  </p> */}
-                  {/* 
+              <input
+                type="text"
+                placeholder="Search Product..."
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+              />
+
+            </div>
+
+            <div className="category-list">
+
+              {Object.keys(
+                groupedProducts
+              ).map((category) => (
+
+                <div
+                  key={category}
+                  className="category-item"
+                >
+
                   <button
-                    className="view-btn"
+                    className={`category-btn ${
+                      activeCategory ===
+                      category
+                        ? "active"
+                        : ""
+                    }`}
                     onClick={() =>
-                      setSelectedProduct(product)
+                      toggleCategory(
+                        category
+                      )
                     }
                   >
-                    View Details
-                  </button> */}
-                  <Link
-                    href={`${basePath}/items/${product.title
-                      .toLowerCase()
-                      .replace(/[^a-z0-9\s-]/g, "")
-                      .replace(/\s+/g, "-")}`}
-                    className="view-btn"
+
+                    <span>
+
+                      {openedCategory ===
+                      category ? (
+                        "▼"
+                      ) : (
+                        "▶"
+                      )}
+
+                      {" "}
+
+                      {category}
+
+                    </span>
+
+                    <span className="count">
+
+                      {
+                        groupedProducts[
+                          category
+                        ].length
+                      }
+
+                    </span>
+
+                  </button>
+
+                  <div
+                    className="category-content"
+                    style={{
+
+                      maxHeight:
+
+                        openedCategory ===
+                        category
+
+                          ? groupedProducts[
+                              category
+                            ].length *
+                              42 +
+                            "px"
+
+                          : "0px",
+
+                    }}
                   >
-                    View Details
-                  </Link>
+
+                    {groupedProducts[
+                      category
+                    ].map((item) => (
+
+                      <button
+                        key={item.uid}
+                        className="product-link"
+                        onClick={() =>
+                          scrollToProduct(
+                            item.slug,
+                            category
+                          )
+                        }
+                      >
+
+                        {item.title}
+
+                      </button>
+
+                    ))}
+
+                  </div>
 
                 </div>
 
-              </div>
-            ))}
+              ))}
+
+            </div>
+
+          </div>
 
         </div>
 
-        {/* PAGINATION */}
-        <div className="pagination">
 
-          {Array.from(
-            { length: totalPages },
-            (_, i) => (
+
+
+
+        {/* =========================
+              RIGHT SIDE
+        ========================= */}
+
+        <div className="right-products">
+
+          <div className="filter-card">
+
+            <div className="row">
+
+              <div className="col-lg-10">
+
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search Product..."
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(
+                      e.target.value
+                    )
+                  }
+                />
+
+              </div>
+
+
+            </div>
+
+          </div>
+                    {Object.entries(
+            paginatedGrouped
+          ).map(
+            ([category, list]) => (
+
+              <div
+                key={category}
+                id={category
+                  .replace(/\s+/g, "-")
+                  .toLowerCase()}
+                className="product-section"
+              >
+
+                <div className="section-title">
+
+                  <h3>
+
+                    {category}
+
+                  </h3>
+
+                  <span>
+
+                    {
+                      groupedProducts[
+                        category
+                      ]?.length
+                    }{" "}
+                    Products
+
+                  </span>
+
+                </div>
+
+                {list.map(
+                  (product) => (
+
+                    <div
+                      key={
+                        product.uid
+                      }
+                      id={
+                        product.slug
+                      }
+                      className="product-list-card"
+                    >
+
+               <div className="product-card-grid">
+
+  {/* IMAGE */}
+
+  <div className="list-image">
+
+    <img
+      src={
+        product.image ||
+        "https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=800"
+      }
+      alt={product.title}
+    />
+
+  </div>
+
+  {/* CONTENT */}
+
+  <div className="list-content">
+
+    <h4>
+
+      {product.title}
+
+    </h4>
+
+    <p>
+
+      {product.desc ||
+        product.description ||
+        "No description available."}
+
+    </p>
+
+    <div className="spec-grid">
+
+      <div>
+
+        <b>
+
+          Brand
+
+        </b>
+
+        <span>
+
+          {product.brand || "-"}
+
+        </span>
+
+      </div>
+
+      <div>
+
+        <b>
+
+          Model
+
+        </b>
+
+        <span>
+
+          {product.model || "-"}
+
+        </span>
+
+      </div>
+
+      <div>
+
+        <b>
+
+          Instrument
+
+        </b>
+
+        <span>
+
+          {product.instrument || "-"}
+
+        </span>
+
+      </div>
+
+      <div>
+
+        <b>
+
+          Throughput
+
+        </b>
+
+        <span>
+
+          {product.throughput || "-"}
+
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  {/* BUTTON */}
+
+  <div className="product-action">
+
+    <Link
+      href={`${basePath}/items/${product.slug}`}
+      className="btn-view"
+    >
+
+      View Details
+
+    </Link>
+
+  </div>
+
+</div>
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
+
+            )
+          )}
+                  {/* ===========================
+              PAGINATION
+        =========================== */}
+
+        <div className="pagination-card">
+
+          <div className="pagination-wrapper">
+
+            <div className="page-size">
+
+              <span>
+                Show
+              </span>
+
+              <select
+                value={productsPerPage}
+                disabled
+              >
+
+                <option>
+                  {productsPerPage}
+                </option>
+
+              </select>
+
+            </div>
+
+            <div className="simple-pagination">
 
               <button
-                key={i}
-                className={`page-btn ${page === i + 1
-                  ? "active"
-                  : ""
-                  }`}
+                disabled={
+                  page === 1
+                }
                 onClick={() =>
-                  setPage(i + 1)
+                  setPage(
+                    (p) => p - 1
+                  )
                 }
               >
-                {i + 1}
+
+                ◀
+
               </button>
-            ))}
+
+              <span>
+
+                {page} / {totalPages}
+
+              </span>
+
+              <button
+                disabled={
+                  page === totalPages
+                }
+                onClick={() =>
+                  setPage(
+                    (p) => p + 1
+                  )
+                }
+              >
+
+                ▶
+
+              </button>
+
+            </div>
+
+          </div>
 
         </div>
 
       </div>
 
+    </div>
 
-    </main>
-  );
+  </div>
+
+</main>
+
+);
+
 }
