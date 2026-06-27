@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   doc,
   getDoc,
+  getDocs,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
@@ -23,9 +24,12 @@ export default function ProductsPage({
   const [products, setProducts] =
     useState([]);
 
-  const [search, setSearch] =
+  const [productSearch, setProductSearch] =
     useState("");
 
+  const [categorySearch, setCategorySearch] =
+    useState("");
+  const [showTopBtn, setShowTopBtn] = useState(false);
   const [page, setPage] =
     useState(1);
 
@@ -79,76 +83,141 @@ export default function ProductsPage({
 
   useEffect(() => {
 
-    const fetchProducts =
-      async () => {
+    const fetchProducts = async () => {
 
-        try {
+      try {
 
-          const snap =
-            await getDoc(
-              doc(
-                db,
-                "websites",
-                "humanbiomedicalscoin",
-                "pages",
-                "products"
-              )
-            );
+        const allProducts = [];
 
-          if (snap.exists()) {
+        // CATEGORY PRODUCTS
+        const categorySnap = await getDocs(
+          collection(
+            db,
+            "websites",
+            "humanbiomedicalscoin",
+            "pages",
+            "categoryproducts",
+            "categories"
+          )
+        );
 
-            const raw =
-              snap.data()
-                ?.products || [];
+        categorySnap.forEach((categoryDoc) => {
 
-            const published =
-              raw
-                .filter(
-                  (item) =>
-                    item.isPublished
-                )
-                .map(
-                  (
-                    item,
-                    index
-                  ) => ({
+          const data = categoryDoc.data();
 
-                    ...item,
+          const products =
+            (data.products || [])
+              .filter(item => item.isPublished)
+              .map((item, index) => ({
 
-                    uid:
-                      index,
+                ...item,
 
-                    slug:
-                      makeSlug(
-                        item.title
-                      ),
+                uid: `${categoryDoc.id}-${index}`,
 
-                    category:
-                      item.category ||
-                      getCategory(
-                        item
-                      ),
+                slug: makeSlug(item.title),
 
-                  })
-                );
+                category:
+                  data.category ||
+                  categoryDoc.id
+                    .replace(/-/g, " ")
+                    .replace(/\b\w/g, l => l.toUpperCase()),
 
-            setProducts(
-              published
-            );
+              }));
 
-          }
+          allProducts.push(...products);
 
-        } catch (err) {
+        });
 
-          console.log(err);
+        // OTHER PRODUCTS
+        const productSnap = await getDoc(
+          doc(
+            db,
+            "websites",
+            "humanbiomedicalscoin",
+            "pages",
+            "products"
+          )
+        );
+
+        if (productSnap.exists()) {
+
+          const otherProducts =
+            (productSnap.data().products || [])
+              .filter(item => item.isPublished)
+              .map((item, index) => ({
+
+                ...item,
+
+                uid: `other-${index}`,
+
+                slug: makeSlug(item.title),
+
+                category:
+                  item.category ||
+                  "Other Products",
+
+              }));
+
+          allProducts.push(...otherProducts);
 
         }
 
-      };
+        setProducts(allProducts);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
 
     fetchProducts();
 
   }, []);
+  useEffect(() => {
+
+    const handleScroll = () => {
+
+      if (window.scrollY > 400) {
+
+        setShowTopBtn(true);
+
+      } else {
+
+        setShowTopBtn(false);
+
+      }
+
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () =>
+      window.removeEventListener("scroll", handleScroll);
+
+  }, []);
+
+  const allGroupedProducts =
+    useMemo(() => {
+
+      const obj = {};
+
+      products.forEach((item) => {
+
+        if (!obj[item.category]) {
+
+          obj[item.category] = [];
+
+        }
+
+        obj[item.category].push(item);
+
+      });
+
+      return obj;
+
+    }, [products]);
 
   const filteredProducts =
     useMemo(() => {
@@ -163,14 +232,18 @@ export default function ProductsPage({
           `.toLowerCase();
 
           return text.includes(
-            search.toLowerCase()
+            productSearch.toLowerCase()
           );
 
         }
       );
 
-    }, [products, search]);
+    }, [products, productSearch]);
+  useEffect(() => {
 
+    setPage(1);
+
+  }, [productSearch]);
   const groupedProducts =
     useMemo(() => {
 
@@ -200,8 +273,26 @@ export default function ProductsPage({
     }, [filteredProducts]);
 
   const categories =
-    Object.keys(
-      groupedProducts
+    Object.keys(allGroupedProducts).sort((a, b) => {
+
+      if (a === "Other Products")
+        return 1;
+
+      if (b === "Other Products")
+        return -1;
+
+      return a.localeCompare(b);
+
+    });
+
+  const filteredCategories =
+    categories.filter(
+      (category) =>
+        category
+          .toLowerCase()
+          .includes(
+            categorySearch.toLowerCase()
+          )
     );
 
   const start =
@@ -212,7 +303,7 @@ export default function ProductsPage({
     filteredProducts.slice(
       start,
       start +
-        productsPerPage
+      productsPerPage
     );
 
   const paginatedGrouped =
@@ -246,7 +337,7 @@ export default function ProductsPage({
   const totalPages =
     Math.ceil(
       filteredProducts.length /
-        productsPerPage
+      productsPerPage
     );
 
   const toggleCategory = (
@@ -276,44 +367,44 @@ export default function ProductsPage({
 
   };
 
-const scrollToProduct = (slug, category) => {
+  const scrollToProduct = (slug, category) => {
 
-  if (openedCategory !== category) {
+    if (openedCategory !== category) {
 
-    setOpenedCategory(category);
-    setActiveCategory(category);
+      setOpenedCategory(category);
+      setActiveCategory(category);
 
-    setTimeout(() => {
+      setTimeout(() => {
 
-      const el = document.getElementById(slug);
+        const el = document.getElementById(slug);
 
-      if (el) {
+        if (el) {
 
-        el.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
+          el.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
 
-      }
+        }
 
-    }, 350); // accordion animation complete hone ka wait
+      }, 350); // accordion animation complete hone ka wait
 
-    return;
+      return;
 
-  }
+    }
 
-  const el = document.getElementById(slug);
+    const el = document.getElementById(slug);
 
-  if (el) {
+    if (el) {
 
-    el.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+      el.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
 
-  }
+    }
 
-};
+  };
 
   useEffect(() => {
 
@@ -361,7 +452,7 @@ const scrollToProduct = (slug, category) => {
         if (
           current &&
           current !==
-            activeCategory
+          activeCategory
         ) {
 
           setActiveCategory(
@@ -423,413 +514,448 @@ const scrollToProduct = (slug, category) => {
         <div className="products-wrapper">
 
           <div className="category-sidebar">
-                      {/* =========================
+            {/* =========================
                 LEFT SIDEBAR
           ========================= */}
 
-          <div className="category-sidebar">
+            <div className="category-sidebar">
 
-            <div className="sidebar-title">
+              <div className="sidebar-title">
 
-              Categories
+                Categories
 
-            </div>
+              </div>
 
-            <div className="sidebar-search">
-
-              <input
-                type="text"
-                placeholder="Search Product..."
-                value={search}
-                onChange={(e) =>
-                  setSearch(
-                    e.target.value
-                  )
-                }
-              />
-
-            </div>
-
-            <div className="category-list">
-
-              {Object.keys(
-                groupedProducts
-              ).map((category) => (
-
-                <div
-                  key={category}
-                  className="category-item"
-                >
-
-                  <button
-                    className={`category-btn ${
-                      activeCategory ===
-                      category
-                        ? "active"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      toggleCategory(
-                        category
-                      )
-                    }
-                  >
-
-                    <span>
-
-                      {openedCategory ===
-                      category ? (
-                        "▼"
-                      ) : (
-                        "▶"
-                      )}
-
-                      {" "}
-
-                      {category}
-
-                    </span>
-
-                    <span className="count">
-
-                      {
-                        groupedProducts[
-                          category
-                        ].length
-                      }
-
-                    </span>
-
-                  </button>
-
-                  <div
-                    className="category-content"
-                    style={{
-
-                      maxHeight:
-
-                        openedCategory ===
-                        category
-
-                          ? groupedProducts[
-                              category
-                            ].length *
-                              42 +
-                            "px"
-
-                          : "0px",
-
-                    }}
-                  >
-
-                    {groupedProducts[
-                      category
-                    ].map((item) => (
-
-                      <button
-                        key={item.uid}
-                        className="product-link"
-                        onClick={() =>
-                          scrollToProduct(
-                            item.slug,
-                            category
-                          )
-                        }
-                      >
-
-                        {item.title}
-
-                      </button>
-
-                    ))}
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-
-
-        {/* =========================
-              RIGHT SIDE
-        ========================= */}
-
-        <div className="right-products">
-
-          <div className="filter-card">
-
-            <div className="row">
-
-              <div className="col-lg-10">
+              <div className="sidebar-search">
 
                 <input
                   type="text"
-                  className="form-control"
                   placeholder="Search Product..."
-                  value={search}
+                  value={categorySearch}
                   onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
+                    setCategorySearch(e.target.value)
                   }
                 />
 
               </div>
 
+              <div className="category-list">
+
+                {filteredCategories.map((category) => (
+
+                  <div
+                    key={category}
+                    className="category-item"
+                  >
+
+                    <button
+                      className={`category-btn ${activeCategory ===
+                        category
+                        ? "active"
+                        : ""
+                        }`}
+                      onClick={() =>
+                        toggleCategory(
+                          category
+                        )
+                      }
+                    >
+
+                      <span>
+
+                        {openedCategory ===
+                          category ? (
+                          "▼"
+                        ) : (
+                          "▶"
+                        )}
+
+                        {" "}
+
+                        {category}
+
+                      </span>
+
+                      <span className="count">
+                        {
+                          allGroupedProducts[
+                            category
+                          ]?.length || 0
+                        }
+                      </span>
+
+                    </button>
+
+                    <div
+                      className="category-content"
+                      style={{
+
+                        maxHeight:
+
+                          openedCategory ===
+                            category
+
+                            ? allGroupedProducts[
+                              category
+                            ].length *
+                            42 +
+                            "px"
+
+                            : "0px",
+
+                      }}
+                    >
+
+                      {allGroupedProducts[
+                        category
+                      ].map((item) => (
+
+                        <button
+                          key={item.uid}
+                          className="product-link"
+                          onClick={() =>
+                            scrollToProduct(
+                              item.slug,
+                              category
+                            )
+                          }
+                        >
+
+                          {item.title}
+
+                        </button>
+
+                      ))}
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
 
             </div>
 
           </div>
-                    {Object.entries(
-            paginatedGrouped
-          ).map(
-            ([category, list]) => (
 
-              <div
-                key={category}
-                id={category
-                  .replace(/\s+/g, "-")
-                  .toLowerCase()}
-                className="product-section"
-              >
 
-                <div className="section-title">
 
-                  <h3>
 
-                    {category}
 
-                  </h3>
+          {/* =========================
+              RIGHT SIDE
+        ========================= */}
 
-                  <span>
+          <div className="right-products">
 
-                    {
-                      groupedProducts[
-                        category
-                      ]?.length
-                    }{" "}
-                    Products
+            <div className="filter-card">
 
-                  </span>
+              <div className="row">
+
+                <div className="col-lg-10">
+
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search Product..."
+                    value={productSearch}
+                    onChange={(e) =>
+                      setProductSearch(e.target.value)
+                    }
+                  />
 
                 </div>
 
-                {list.map(
-                  (product) => (
-
-                    <div
-                      key={
-                        product.uid
-                      }
-                      id={
-                        product.slug
-                      }
-                      className="product-list-card"
-                    >
-
-               <div className="product-card-grid">
-
-  {/* IMAGE */}
-
-  <div className="list-image">
-
-    <img
-      src={
-        product.image ||
-        "https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=800"
-      }
-      alt={product.title}
-    />
-
-  </div>
-
-  {/* CONTENT */}
-
-  <div className="list-content">
-
-    <h4>
-
-      {product.title}
-
-    </h4>
-
-    <p>
-
-      {product.desc ||
-        product.description ||
-        "No description available."}
-
-    </p>
-
-    <div className="spec-grid">
-
-      <div>
-
-        <b>
-
-          Brand
-
-        </b>
-
-        <span>
-
-          {product.brand || "-"}
-
-        </span>
-
-      </div>
-
-      <div>
-
-        <b>
-
-          Model
-
-        </b>
-
-        <span>
-
-          {product.model || "-"}
-
-        </span>
-
-      </div>
-
-      <div>
-
-        <b>
-
-          Instrument
-
-        </b>
-
-        <span>
-
-          {product.instrument || "-"}
-
-        </span>
-
-      </div>
-
-      <div>
-
-        <b>
-
-          Throughput
-
-        </b>
-
-        <span>
-
-          {product.throughput || "-"}
-
-        </span>
-
-      </div>
-
-    </div>
-
-  </div>
-
-  {/* BUTTON */}
-
-  <div className="product-action">
-
-    <Link
-      href={`${basePath}/items/${product.slug}`}
-      className="btn-view"
-    >
-
-      View Details
-
-    </Link>
-
-  </div>
-
-</div>
-
-                    </div>
-
-                  )
-                )}
 
               </div>
 
-            )
-          )}
-                  {/* ===========================
+            </div>
+            {filteredProducts.length === 0 && (
+
+              <div className="no-products">
+
+                <div className="no-products-icon">
+                  🔍
+                </div>
+
+                <h2>
+                  No Products Found
+                </h2>
+
+                <p>
+                  We couldn't find any products matching your search.
+                </p>
+
+                <button
+                  className="reset-search-btn"
+                  onClick={() => setProductSearch("")}
+                >
+                  View All Products
+                </button>
+
+              </div>
+
+            )}
+            {Object.entries(
+              paginatedGrouped
+            ).map(
+              ([category, list]) => (
+
+                <div
+                  key={category}
+                  id={category
+                    .replace(/\s+/g, "-")
+                    .toLowerCase()}
+                  className="product-section"
+                >
+
+                  <div className="section-title">
+
+                    <h3>
+
+                      {category}
+
+                    </h3>
+
+                    <span>
+
+                      {
+                        groupedProducts[
+                          category
+                        ]?.length
+                      }{" "}
+                      Products
+
+                    </span>
+
+                  </div>
+
+                  {list.map(
+                    (product) => (
+
+                      <div
+                        key={
+                          product.uid
+                        }
+                        id={
+                          product.slug
+                        }
+                        className="product-list-card"
+                      >
+
+                        <div className="product-card-grid">
+
+                          {/* IMAGE */}
+
+                          <div className="list-image">
+
+                            <img
+                              src={
+                                product.image ||
+                                "https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=800"
+                              }
+                              alt={product.title}
+                            />
+
+                          </div>
+
+                          {/* CONTENT */}
+
+                          <div className="list-content">
+
+                            <h4>
+
+                              {product.title}
+
+                            </h4>
+
+                            <p>
+
+                              {product.desc ||
+                                product.description ||
+                                "No description available."}
+
+                            </p>
+
+                            <div className="spec-grid">
+
+                              <div>
+
+                                <b>
+
+                                  Brand
+
+                                </b>
+
+                                <span>
+
+                                  {product.brand || "-"}
+
+                                </span>
+
+                              </div>
+
+                              <div>
+
+                                <b>
+
+                                  Model
+
+                                </b>
+
+                                <span>
+
+                                  {product.model || "-"}
+
+                                </span>
+
+                              </div>
+
+                              <div>
+
+                                <b>
+
+                                  Instrument
+
+                                </b>
+
+                                <span>
+
+                                  {product.instrument || "-"}
+
+                                </span>
+
+                              </div>
+
+                              <div>
+
+                                <b>
+
+                                  Throughput
+
+                                </b>
+
+                                <span>
+
+                                  {product.throughput || "-"}
+
+                                </span>
+
+                              </div>
+
+                            </div>
+
+                          </div>
+
+                          {/* BUTTON */}
+
+                          <div className="product-action">
+
+                            <Link
+                              href={`${basePath}/items/${product.slug}`}
+                              className="btn-view"
+                            >
+
+                              View Details
+
+                            </Link>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+              )
+            )}
+            {/* ===========================
               PAGINATION
         =========================== */}
 
-        <div className="pagination-card">
+            <div className="pagination-card">
 
-          <div className="pagination-wrapper">
+              <div className="pagination-wrapper">
 
-            <div className="page-size">
+                <div className="page-size">
 
-              <span>
-                Show
-              </span>
+                  <span>
+                    Show
+                  </span>
 
-              <select
-                value={productsPerPage}
-                disabled
-              >
+                  <select
+                    value={productsPerPage}
+                    disabled
+                  >
 
-                <option>
-                  {productsPerPage}
-                </option>
+                    <option>
+                      {productsPerPage}
+                    </option>
 
-              </select>
+                  </select>
 
-            </div>
+                </div>
 
-            <div className="simple-pagination">
+                <div className="simple-pagination">
 
-              <button
-                disabled={
-                  page === 1
-                }
-                onClick={() =>
-                  setPage(
-                    (p) => p - 1
-                  )
-                }
-              >
+                  <button
+                    disabled={
+                      page === 1
+                    }
+                    onClick={() => {
 
-                ◀
+                      setPage(
+                        (p) => p - 1
+                      );
 
-              </button>
+                      window.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                      });
 
-              <span>
+                    }}
+                  >
 
-                {page} / {totalPages}
+                    ◀
 
-              </span>
+                  </button>
 
-              <button
-                disabled={
-                  page === totalPages
-                }
-                onClick={() =>
-                  setPage(
-                    (p) => p + 1
-                  )
-                }
-              >
+                  <span>
 
-                ▶
+                    {page} / {totalPages}
 
-              </button>
+                  </span>
+
+                  <button
+                    disabled={
+                      page === totalPages
+                    }
+                    onClick={() => {
+
+                      setPage(
+                        (p) => p + 1
+                      );
+
+                      window.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                      });
+
+                    }}
+                  >
+
+                    ▶
+
+                  </button>
+
+                </div>
+
+              </div>
 
             </div>
 
@@ -838,13 +964,25 @@ const scrollToProduct = (slug, category) => {
         </div>
 
       </div>
+      {showTopBtn && (
 
-    </div>
+        <button
+          className="back-to-top-btn"
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            })
+          }
+        >
 
-  </div>
+          ↑
 
-</main>
+        </button>
 
-);
+      )}
+    </main>
+
+  );
 
 }
