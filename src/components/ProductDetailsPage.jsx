@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
     doc,
     getDoc,
@@ -8,7 +7,10 @@ import {
     collection,
     serverTimestamp,
 } from "firebase/firestore";
-
+import {
+    FaShareAlt,
+    FaPlay,
+} from "react-icons/fa";
 import { db } from "@/lib/firebase";
 
 import toast, {
@@ -35,6 +37,10 @@ export default function ProductDetailsPage({
 
     const [loading, setLoading] =
         useState(false);
+
+        const [selectedImage, setSelectedImage] = useState("");
+const [selectedMedia, setSelectedMedia] = useState("image");
+const shareRef = useRef();
 
     useEffect(() => {
 
@@ -76,6 +82,16 @@ export default function ProductDetailsPage({
 
                         setProduct(found);
 
+                        if (found) {
+
+                            setSelectedImage(
+                                found.images?.[0] ||
+                                found.image
+                            );
+
+                            setSelectedMedia("image");
+
+                        }
                     }
 
                 } catch (error) {
@@ -226,11 +242,154 @@ export default function ProductDetailsPage({
 
                     <div>
 
-                        <img
-                            src={product.image}
-                            alt={product.title}
-                            className="product-detail-image"
-                        />
+                       <>
+    {selectedMedia === "video" &&
+    product.video ? (
+
+        <video
+            controls
+            className="product-detail-image"
+        >
+            <source
+                src={product.video}
+                type="video/mp4"
+            />
+        </video>
+
+    ) : (
+
+        <img
+            src={
+                selectedImage ||
+                product.image
+            }
+            alt={product.title}
+            className="product-detail-image"
+        />
+
+    )}
+
+    <div
+       style={{
+    display: "flex",
+    gap: 10,
+    marginTop: 20,
+    flexWrap: "nowrap",
+    overflowX: "auto",
+    alignItems: "center",
+    paddingBottom: "6px",
+}}
+    >
+
+        {(product.images?.length
+            ? product.images
+            : [product.image]
+        ).map((img, i) => (
+
+            <img
+                key={i}
+                src={img}
+                onClick={() => {
+
+                    setSelectedImage(img);
+
+                    setSelectedMedia("image");
+
+                }}
+                style={{
+                    width: 70,
+                    height: 70,
+                    objectFit: "cover",
+                    cursor: "pointer",
+                    borderRadius: 8,
+                    border:
+                        selectedImage === img
+                            ? "2px solid #2563eb"
+                            : "1px solid #ddd",
+                }}
+            />
+
+        ))}
+
+
+
+  {product.video && (
+
+    <div
+        onClick={() => setSelectedMedia("video")}
+        style={{
+          width: 70,
+            height: 70,
+            borderRadius: 12,
+            overflow: "hidden",
+            cursor: "pointer",
+            border:
+                selectedMedia === "video"
+                    ? "2px solid #2563eb"
+                    : "1px solid #ddd",
+            position: "relative",
+        }}
+    >
+
+        <video
+            src={product.video}
+            muted
+            preload="metadata"
+            style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                pointerEvents: "none",
+            }}
+        />
+
+        <div
+            style={{
+                position: "absolute",
+                inset: 0,
+                background: "rgba(0,0,0,.35)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                color: "#fff",
+                fontSize: 28,
+                fontWeight: 700,
+            }}
+        >
+            ▶
+        </div>
+
+    </div>
+
+)}
+
+        {product.pdf && (
+
+<a
+    href={product.pdf}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+        width: 70,
+        height: 70,
+        borderRadius: 8,
+        background: "#9b1c1c",
+        color: "#fff",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        textDecoration: "none",
+        fontWeight: 700,
+        flexShrink: 0,
+    }}
+>
+    PDF
+</a>
+
+        )}
+
+    </div>
+</>
 
                     </div>
 
@@ -240,9 +399,66 @@ export default function ProductDetailsPage({
                             {product.brand}
                         </span>
 
-                        <h1 className="product-detail-title">
-                            {product.title}
-                        </h1>
+                     <div
+style={{
+display:"flex",
+justifyContent:"space-between",
+alignItems:"center"
+}}
+>
+
+<h1 className="product-detail-title">
+
+{product.title}
+
+</h1>
+
+<button
+
+className="send-btn"
+
+style={{
+width:75,
+height:36,
+padding:0,
+borderRadius:"50%"
+}}
+
+onClick={async()=>{
+
+try{
+
+if(navigator.share){
+
+await navigator.share({
+
+title:product.title,
+
+text:product.details,
+
+url:window.location.href,
+
+});
+
+}else{
+
+await navigator.clipboard.writeText(window.location.href);
+
+toast.success("Link Copied");
+
+}
+
+}catch(e){}
+
+}}
+
+>
+
+<FaShareAlt/>
+
+</button>
+
+</div>
 
                         <p className="product-detail-desc">
                             {product.details}
