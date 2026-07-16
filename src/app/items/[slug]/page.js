@@ -19,7 +19,7 @@ export async function generateMetadata({
         `${productName} | Biomedical Equipment Supplier India`;
 
     const description =
-        `Buy ${productName} from Raj Biosis. Trusted supplier of biomedical equipment, laboratory instruments, pathology analyzers and healthcare solutions across India.`;
+        `Buy ${productName} from Human Biomedicals . Trusted supplier of biomedical equipment, laboratory instruments, pathology analyzers and healthcare solutions across India.`;
 
     return {
         title,
@@ -34,7 +34,7 @@ export async function generateMetadata({
             "Laboratory Equipment",
             "Diagnostic Equipment",
             "Pathology Analyzer",
-            "Raj Biosis",
+            "Human Biomedicals ",
         ],
 
         robots: {
@@ -55,7 +55,7 @@ export async function generateMetadata({
                 `https://humanbiomedicals.co.in/products/${slug}`,
 
             siteName:
-                "Raj Biosis",
+                "Human Biomedicals ",
 
             locale:
                 "en_IN",

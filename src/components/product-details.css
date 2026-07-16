@@ -12,11 +12,12 @@
 
 .product-detail-image {
     width: 100%;
-    height: auto;
+    height: 600px;
     display: block;
     border-radius: 30px;
     background: #fff;
-    object-fit: cover;
+    object-fit: contain;
+    padding: 20px;
 }
 
 .product-brand {
@@ -136,6 +137,10 @@
         font-size: 38px;
     }
 
+    .product-detail-image {
+        height: 450px;
+    }
+
     .product-detail-desc {
         font-size: 16px;
         line-height: 30px;
@@ -155,7 +160,9 @@
     }
 
     .product-detail-image {
+        height: 300px;
         border-radius: 20px;
+        padding: 10px;
     }
 
     .product-detail-title {
@@ -287,4 +294,22 @@
     .skeleton-title {
         height: 40px;
     }
+}
+
+.seo-content {
+    margin-top: 40px;
+}
+
+.seo-content h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 25px 0 10px;
+    color: #111827;
+}
+
+.seo-content p {
+    line-height: 1.9;
+    color: #4b5563;
+    font-size: 16px;
+    margin-bottom: 15px;
 }

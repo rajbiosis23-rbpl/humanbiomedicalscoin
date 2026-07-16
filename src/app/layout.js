@@ -7,18 +7,18 @@ import FloatingCTA from "@/components/common/FloatingCTA";
 
 export const metadata = {
   metadataBase: new URL(
-    "https://www.rajbiosis.com"
+    "https://www.humanbiomedicals.co.in"
   ),
 
   title: {
     default:
-      "Raj Biosis | Biomedical, Laboratory & Diagnostic Equipment Supplier India",
+      "Human Biomedicals | Biomedical, Laboratory & Diagnostic Equipment Supplier India",
     template:
-      "%s | Raj Biosis",
+      "%s | Human Biomedicals",
   },
 
   description:
-    "Raj Biosis is a trusted supplier of biomedical equipment, laboratory instruments, diagnostic systems, pathology analyzers and healthcare solutions across India.",
+    "Human Biomedicals  is a trusted supplier of biomedical equipment, laboratory instruments, diagnostic systems, pathology analyzers and healthcare solutions across India.",
 
   keywords: [
     "Biomedical Equipment India",
@@ -28,17 +28,17 @@ export const metadata = {
     "Hospital Equipment",
     "Medical Devices India",
     "Healthcare Solutions",
-    "Raj Biosis",
+    "Human Biomedicals ",
   ],
 
   authors: [
     {
-      name: "Raj Biosis",
+      name: "Human Biomedicals ",
     },
   ],
 
-  creator: "Raj Biosis",
-  publisher: "Raj Biosis",
+  creator: "Human Biomedicals ",
+  publisher: "Human Biomedicals ",
 
   robots: {
     index: true,
@@ -54,21 +54,21 @@ export const metadata = {
 
   alternates: {
     canonical:
-      "https://www.rajbiosis.com",
+      "https://www.humanbiomedicals.co.in",
   },
 
   openGraph: {
     title:
-      "Raj Biosis | Biomedical & Diagnostic Equipment Supplier",
+      "Human Biomedicals  | Biomedical & Diagnostic Equipment Supplier",
 
     description:
       "Premium biomedical products, laboratory instruments, diagnostic analyzers and healthcare solutions across India.",
 
     url:
-      "https://www.rajbiosis.com",
+      "https://www.humanbiomedicals.co.in",
 
     siteName:
-      "Raj Biosis",
+      "Human Biomedicals ",
 
     locale:
       "en_IN",
@@ -81,7 +81,7 @@ export const metadata = {
         url: "/images/logo.png",
         width: 1200,
         height: 630,
-        alt: "Raj Biosis",
+        alt: "Human Biomedicals ",
       },
     ],
   },
@@ -91,7 +91,7 @@ export const metadata = {
       "summary_large_image",
 
     title:
-      "Raj Biosis | Biomedical Equipment Supplier",
+      "Human Biomedicals  | Biomedical Equipment Supplier",
 
     description:
       "Trusted supplier of biomedical, laboratory and diagnostic equipment in India.",

@@ -749,15 +749,12 @@ export default function ProductsPage({
                           {/* IMAGE */}
 
                           <div className="list-image">
-
-                            <img
-                              src={
-                                product.image ||
-                                "https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=800"
-                              }
-                              alt={product.title}
-                            />
-
+                            {product.images?.[0] ? (
+                              <img
+                                src={product.images[0]}
+                                alt={product.title}
+                              />
+                            ) : null}
                           </div>
 
                           {/* CONTENT */}

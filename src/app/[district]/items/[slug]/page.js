@@ -24,10 +24,10 @@ export async function generateMetadata({
             );
 
     const title =
-        `${productName} Supplier in ${city} | Raj Biosis`;
+        `${productName} Supplier in ${city} | Human Biomedicals `;
 
     const description =
-        `Buy ${productName} in ${city} from Raj Biosis. Trusted supplier of biomedical equipment, laboratory instruments, diagnostic systems and pathology analyzers.`;
+        `Buy ${productName} in ${city} from Human Biomedicals . Trusted supplier of biomedical equipment, laboratory instruments, diagnostic systems and pathology analyzers.`;
 
     return {
         title,
@@ -42,7 +42,7 @@ export async function generateMetadata({
             `Biomedical Equipment ${city}`,
             `Laboratory Equipment ${city}`,
             `Diagnostic Equipment ${city}`,
-            "Raj Biosis",
+            "Human Biomedicals ",
         ],
 
         robots: {
@@ -63,7 +63,7 @@ export async function generateMetadata({
                 `https://humanbiomedicals.co.in/${district}/products/${slug}`,
 
             siteName:
-                "Raj Biosis",
+                "Human Biomedicals ",
 
             locale:
                 "en_IN",

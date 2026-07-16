@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
 import {
     doc,
     getDoc,
+    getDocs,
     addDoc,
     collection,
     serverTimestamp,
@@ -38,9 +40,9 @@ export default function ProductDetailsPage({
     const [loading, setLoading] =
         useState(false);
 
-        const [selectedImage, setSelectedImage] = useState("");
-const [selectedMedia, setSelectedMedia] = useState("image");
-const shareRef = useRef();
+    const [selectedImage, setSelectedImage] = useState("");
+    const [selectedMedia, setSelectedMedia] = useState("image");
+    const shareRef = useRef();
 
     useEffect(() => {
 
@@ -65,20 +67,48 @@ const shareRef = useRef();
                         const products =
                             snap.data()?.products || [];
 
-                        const found =
-                            products.find(
-                                (item) =>
-                                    item.title
-                                        ?.toLowerCase()
-                                        .replace(
-                                            /[^a-z0-9\s-]/g,
-                                            ""
-                                        )
-                                        .replace(
-                                            /\s+/g,
-                                            "-"
-                                        ) === slug
+                        let found = products.find(
+                            (item) =>
+                                item.title
+                                    ?.toLowerCase()
+                                    .replace(/[^a-z0-9\s-]/g, "")
+                                    .replace(/\s+/g, "-") === slug
+                        );
+
+                        // CATEGORY PRODUCTS SEARCH
+                        if (!found) {
+
+                            const categorySnap = await getDocs(
+                                collection(
+                                    db,
+                                    "websites",
+                                    "humanbiomedicalscoin",
+                                    "pages",
+                                    "categoryproducts",
+                                    "categories"
+                                )
                             );
+
+                            categorySnap.forEach((categoryDoc) => {
+
+                                const categoryProducts =
+                                    categoryDoc.data()?.products || [];
+
+                                const match =
+                                    categoryProducts.find(
+                                        (item) =>
+                                            item.title
+                                                ?.toLowerCase()
+                                                .replace(/[^a-z0-9\s-]/g, "")
+                                                .replace(/\s+/g, "-") === slug
+                                    );
+
+                                if (match) {
+                                    found = match;
+                                }
+
+                            });
+                        }
 
                         setProduct(found);
 
@@ -104,6 +134,30 @@ const shareRef = useRef();
         fetchProduct();
 
     }, [slug]);
+
+    const pathname = usePathname();
+
+    const firstSegment =
+        pathname.split("/")[1];
+
+    const staticRoutes = [
+        "",
+        "about",
+        "items",
+        "services",
+        "contact",
+    ];
+
+    const district =
+        !staticRoutes.includes(firstSegment)
+            ? firstSegment
+            : "";
+
+    const city = district
+        ? district
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, c => c.toUpperCase())
+        : "India";
 
     const submitEnquiry =
         async () => {
@@ -242,154 +296,154 @@ const shareRef = useRef();
 
                     <div>
 
-                       <>
-    {selectedMedia === "video" &&
-    product.video ? (
+                        <>
+                            {selectedMedia === "video" &&
+                                product.video ? (
 
-        <video
-            controls
-            className="product-detail-image"
-        >
-            <source
-                src={product.video}
-                type="video/mp4"
-            />
-        </video>
+                                <video
+                                    controls
+                                    className="product-detail-image"
+                                >
+                                    <source
+                                        src={product.video}
+                                        type="video/mp4"
+                                    />
+                                </video>
 
-    ) : (
+                            ) : (
 
-        <img
-            src={
-                selectedImage ||
-                product.image
-            }
-            alt={product.title}
-            className="product-detail-image"
-        />
+                                <img
+                                    src={
+                                        selectedImage ||
+                                        product.image
+                                    }
+                                    alt={product.title}
+                                    className="product-detail-image"
+                                />
 
-    )}
+                            )}
 
-    <div
-       style={{
-    display: "flex",
-    gap: 10,
-    marginTop: 20,
-    flexWrap: "nowrap",
-    overflowX: "auto",
-    alignItems: "center",
-    paddingBottom: "6px",
-}}
-    >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: 10,
+                                    marginTop: 20,
+                                    flexWrap: "nowrap",
+                                    overflowX: "auto",
+                                    alignItems: "center",
+                                    paddingBottom: "6px",
+                                }}
+                            >
 
-        {(product.images?.length
-            ? product.images
-            : [product.image]
-        ).map((img, i) => (
+                                {(product.images?.length
+                                    ? product.images
+                                    : [product.image]
+                                ).map((img, i) => (
 
-            <img
-                key={i}
-                src={img}
-                onClick={() => {
+                                    <img
+                                        key={i}
+                                        src={img}
+                                        onClick={() => {
 
-                    setSelectedImage(img);
+                                            setSelectedImage(img);
 
-                    setSelectedMedia("image");
+                                            setSelectedMedia("image");
 
-                }}
-                style={{
-                    width: 70,
-                    height: 70,
-                    objectFit: "cover",
-                    cursor: "pointer",
-                    borderRadius: 8,
-                    border:
-                        selectedImage === img
-                            ? "2px solid #2563eb"
-                            : "1px solid #ddd",
-                }}
-            />
+                                        }}
+                                        style={{
+                                            width: 70,
+                                            height: 70,
+                                            objectFit: "contain",
+                                            cursor: "pointer",
+                                            borderRadius: 8,
+                                            border:
+                                                selectedImage === img
+                                                    ? "2px solid #2563eb"
+                                                    : "1px solid #ddd",
+                                        }}
+                                    />
 
-        ))}
+                                ))}
 
 
 
-  {product.video && (
+                                {product.video && (
 
-    <div
-        onClick={() => setSelectedMedia("video")}
-        style={{
-          width: 70,
-            height: 70,
-            borderRadius: 12,
-            overflow: "hidden",
-            cursor: "pointer",
-            border:
-                selectedMedia === "video"
-                    ? "2px solid #2563eb"
-                    : "1px solid #ddd",
-            position: "relative",
-        }}
-    >
+                                    <div
+                                        onClick={() => setSelectedMedia("video")}
+                                        style={{
+                                            width: 70,
+                                            height: 70,
+                                            borderRadius: 12,
+                                            overflow: "hidden",
+                                            cursor: "pointer",
+                                            border:
+                                                selectedMedia === "video"
+                                                    ? "2px solid #2563eb"
+                                                    : "1px solid #ddd",
+                                            position: "relative",
+                                        }}
+                                    >
 
-        <video
-            src={product.video}
-            muted
-            preload="metadata"
-            style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                pointerEvents: "none",
-            }}
-        />
+                                        <video
+                                            src={product.video}
+                                            muted
+                                            preload="metadata"
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                                objectFit: "cover",
+                                                pointerEvents: "none",
+                                            }}
+                                        />
 
-        <div
-            style={{
-                position: "absolute",
-                inset: 0,
-                background: "rgba(0,0,0,.35)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                color: "#fff",
-                fontSize: 28,
-                fontWeight: 700,
-            }}
-        >
-            ▶
-        </div>
+                                        <div
+                                            style={{
+                                                position: "absolute",
+                                                inset: 0,
+                                                background: "rgba(0,0,0,.35)",
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                alignItems: "center",
+                                                color: "#fff",
+                                                fontSize: 28,
+                                                fontWeight: 700,
+                                            }}
+                                        >
+                                            ▶
+                                        </div>
 
-    </div>
+                                    </div>
 
-)}
+                                )}
 
-        {product.pdf && (
+                                {product.pdf && (
 
-<a
-    href={product.pdf}
-    target="_blank"
-    rel="noopener noreferrer"
-    style={{
-        width: 70,
-        height: 70,
-        borderRadius: 8,
-        background: "#9b1c1c",
-        color: "#fff",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        textDecoration: "none",
-        fontWeight: 700,
-        flexShrink: 0,
-    }}
->
-    PDF
-</a>
+                                    <a
+                                        href={product.pdf}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            width: 70,
+                                            height: 70,
+                                            borderRadius: 8,
+                                            background: "#9b1c1c",
+                                            color: "#fff",
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            textDecoration: "none",
+                                            fontWeight: 700,
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        PDF
+                                    </a>
 
-        )}
+                                )}
 
-    </div>
-</>
+                            </div>
+                        </>
 
                     </div>
 
@@ -399,66 +453,66 @@ const shareRef = useRef();
                             {product.brand}
                         </span>
 
-                     <div
-style={{
-display:"flex",
-justifyContent:"space-between",
-alignItems:"center"
-}}
->
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center"
+                            }}
+                        >
 
-<h1 className="product-detail-title">
+                            <h1 className="product-detail-title">
 
-{product.title}
+                                {product.title}
 
-</h1>
+                            </h1>
 
-<button
+                            <button
 
-className="send-btn"
+                                className="send-btn"
 
-style={{
-width:75,
-height:36,
-padding:0,
-borderRadius:"50%"
-}}
+                                style={{
+                                    width: 75,
+                                    height: 36,
+                                    padding: 0,
+                                    borderRadius: "50%"
+                                }}
 
-onClick={async()=>{
+                                onClick={async () => {
 
-try{
+                                    try {
 
-if(navigator.share){
+                                        if (navigator.share) {
 
-await navigator.share({
+                                            await navigator.share({
 
-title:product.title,
+                                                title: product.title,
 
-text:product.details,
+                                                text: product.details,
 
-url:window.location.href,
+                                                url: window.location.href,
 
-});
+                                            });
 
-}else{
+                                        } else {
 
-await navigator.clipboard.writeText(window.location.href);
+                                            await navigator.clipboard.writeText(window.location.href);
 
-toast.success("Link Copied");
+                                            toast.success("Link Copied");
 
-}
+                                        }
 
-}catch(e){}
+                                    } catch (e) { }
 
-}}
+                                }}
 
->
+                            >
 
-<FaShareAlt/>
+                                <FaShareAlt />
 
-</button>
+                            </button>
 
-</div>
+                        </div>
 
                         <p className="product-detail-desc">
                             {product.details}
@@ -579,8 +633,74 @@ toast.success("Link Copied");
                             </button>
 
                         </div>
-
                     </div>
+
+                </div>
+                <div className="seo-content">
+
+                    <h2>
+                        {product.title} Supplier in {city}
+                    </h2>
+
+                    <p>
+                        Human Biomedicals  is a trusted supplier of {product.title} in {city}.
+                        We provide premium quality {product.title} for hospitals,
+                        pathology laboratories, diagnostic centres, research institutes
+                        and healthcare facilities across {city}.
+                    </p>
+
+                    <h2>
+                        Why Choose Our {product.title} in {city}
+                    </h2>
+
+                    <p>
+                        Our {product.title} is known for reliable performance,
+                        accurate results, advanced technology and long operational life.
+                        We provide complete installation, training, maintenance and
+                        after-sales support for customers in {city}.
+                    </p>
+
+                    <h2>
+                        Features of {product.title}
+                    </h2>
+
+                    <p>
+                        The {product.title} offers high efficiency, user-friendly
+                        operation, low maintenance requirements and dependable
+                        diagnostic performance for modern laboratories in {city}.
+                    </p>
+
+                    <h2>
+                        Applications of {product.title} in {city}
+                    </h2>
+
+                    <p>
+                        {product.title} is widely used in hospitals,
+                        pathology laboratories, diagnostic centres,
+                        blood banks, research institutes and healthcare
+                        organizations throughout {city}.
+                    </p>
+
+                    <h2>
+                        {product.title} Dealer and Distributor in {city}
+                    </h2>
+
+                    <p>
+                        Looking for a trusted {product.title} dealer in {city}?
+                        Human Biomedicals  supplies advanced biomedical and laboratory
+                        equipment with fast delivery, expert guidance and
+                        dedicated customer support across {city}.
+                    </p>
+
+                    <h2>
+                        Buy {product.title} in {city}
+                    </h2>
+
+                    <p>
+                        Buy high-quality {product.title} in {city} at competitive prices.
+                        Contact our team today for product specifications,
+                        pricing details, installation assistance and technical support.
+                    </p>
 
                 </div>
 
