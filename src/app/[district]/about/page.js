@@ -53,21 +53,9 @@ export async function generateMetadata({
   };
 }
 
-// DYNAMIC DISTRICTS
+// DYNAMIC DISTRICTS (On-demand rendering for fast builds)
 export async function generateStaticParams() {
-  try {
-    const districts = await fetchDistrictsList();
-    return districts.map((district) => ({
-      district,
-    }));
-  } catch (error) {
-    console.error(
-      "District fetch error:",
-      error
-    );
-
-    return [];
-  }
+  return [];
 }
 
 export default async function Page({

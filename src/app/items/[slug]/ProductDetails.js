@@ -33,6 +33,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
     const [selectedMedia, setSelectedMedia] = useState("image");
     const [showShare, setShowShare] = useState(false);
     const [loading, setLoading] = useState(!initialProduct);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
     const shareRef = useRef();
     const [form, setForm] = useState({
@@ -47,6 +48,24 @@ export default function ProductDetails({ slug, product: initialProduct }) {
     const pathParts = pathname.split("/").filter(Boolean);
     const city = pathParts.length > 1 ? pathParts[0] : "India";
     const cityName = city.charAt(0).toUpperCase() + city.slice(1);
+
+    const handleDownloadPDF = async () => {
+        if (!product || isGeneratingPDF) return;
+
+        const toastId = toast.loading("Generating product PDF brochure...");
+        setIsGeneratingPDF(true);
+
+        try {
+            const { generateProductPDF } = await import("@/lib/generateProductPDF");
+            await generateProductPDF(product, selectedImage, cityName);
+            toast.success("PDF Brochure Downloaded!", { id: toastId });
+        } catch (err) {
+            console.error("PDF generation error:", err);
+            toast.error("Failed to generate PDF. Please try again.", { id: toastId });
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
 
     useEffect(() => {
         if (initialProduct) {
@@ -427,6 +446,20 @@ export default function ProductDetails({ slug, product: initialProduct }) {
 
                             )}
 
+                            <button
+                                type="button"
+                                onClick={handleDownloadPDF}
+                                disabled={isGeneratingPDF}
+                                className={`media-thumb pdf-thumb-btn ${isGeneratingPDF ? "opacity-60 cursor-not-allowed" : ""}`}
+                                title="Download Product PDF"
+                                data-html2canvas-ignore="true"
+                            >
+                                <span className="pdf-icon" style={{ fontSize: "20px" }}>📥</span>
+                                <span style={{ fontSize: "11px", fontWeight: "600", color: "#0e7490", marginTop: "2px" }}>
+                                    {isGeneratingPDF ? "Saving..." : "Save PDF"}
+                                </span>
+                            </button>
+
                         </div>
 
                     </div>
@@ -449,18 +482,18 @@ export default function ProductDetails({ slug, product: initialProduct }) {
                                     onClick={handleNativeShare}
                                     className="share-btn"
                                 >
-                                    <FaShareAlt size={18} />
+                                    <FaShareAlt />
                                 </button>
 
                                 {showShare && (
 
-                                    <div className="share-popup">
+                                    <div className="share-dropdown">
 
                                         <button
-                                            onClick={handleCopy}
+                                            onClick={handleCopyLink}
                                             className="share-item"
                                         >
-                                            <FaLink />
+                                            <FaLink className="copy-icon" />
                                             Copy Link
                                         </button>
 
@@ -540,6 +573,47 @@ export default function ProductDetails({ slug, product: initialProduct }) {
 
                         </div>
 
+                        {/* Download PDF Brochure CTA Button */}
+                        <div style={{
+                          marginTop: "20px",
+                          padding: "16px 20px",
+                          borderRadius: "18px",
+                          background: "#ffffff",
+                          border: "1px solid #e2e8f0",
+                          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: "16px",
+                          flexWrap: "wrap"
+                        }}>
+                            <div>
+                                <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#1e293b", margin: 0 }}>Product Specifications Brochure</h4>
+                                <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0 0" }}>Download official PDF catalog with technical specs</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleDownloadPDF}
+                                disabled={isGeneratingPDF}
+                                style={{
+                                  padding: "10px 20px",
+                                  background: "linear-gradient(135deg, #9b111e, #d72638)",
+                                  color: "#ffffff",
+                                  fontWeight: "700",
+                                  fontSize: "13px",
+                                  borderRadius: "12px",
+                                  border: "none",
+                                  cursor: isGeneratingPDF ? "not-allowed" : "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  boxShadow: "0 6px 20px rgba(155, 17, 30, 0.2)"
+                                }}
+                            >
+                                <span>📥</span>
+                                <span>{isGeneratingPDF ? "Generating PDF..." : "Download PDF Brochure"}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

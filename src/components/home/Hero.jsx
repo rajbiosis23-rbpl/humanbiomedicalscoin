@@ -38,18 +38,14 @@ export default function Hero({ city = "" }) {
     fetchHero();
   }, []);
 
-  if (!heroData) {
-    return null;
-  }
-
   const data = {
-    badge: heroData?.badge || "",
-    title: heroData?.title || "",
-    description: heroData?.description || "",
-    button1Text: heroData?.button1Text || "",
-    button1Link: heroData?.button1Link || "#",
-    button2Text: heroData?.button2Text || "",
-    button2Link: heroData?.button2Link || "#",
+    badge: heroData?.badge || "ISO 9001:2015 Certified Biomedical Supplier",
+    title: heroData?.title || "Advanced Biomedical & Laboratory Equipment",
+    description: heroData?.description || "Human Biomedicals provides top-tier pathology analyzers, biochemistry systems, hematology instruments, and 24/7 technical support for hospitals & diagnostic centers across India.",
+    button1Text: heroData?.button1Text || "Get Quote",
+    button1Link: heroData?.button1Link || "/contact",
+    button2Text: heroData?.button2Text || "View Products",
+    button2Link: heroData?.button2Link || "/items",
   };
 
   return (

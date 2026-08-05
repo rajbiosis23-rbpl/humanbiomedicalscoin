@@ -1,4 +1,5 @@
 import Hero from "@/components/home/Hero";
+import HomeBanner from "@/components/home/HomeBanner";
 import Stats from "@/components/home/Stats";
 import WhyChoose from "@/components/home/WhyChoose";
 // import ProductShowcase from "@/components/home/itemshowcase";
@@ -190,6 +191,8 @@ export default async function DistrictPage({
   return (
     <>
       <Hero city={city} />
+
+      <HomeBanner city={city} />
 
       <Stats />
 

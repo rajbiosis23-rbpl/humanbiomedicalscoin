@@ -1,17 +1,9 @@
 import ProductsPage from "@/app/items/page";
 import { fetchDistrictsList } from "@/lib/data-fetcher";
 
-// FIREBASE DISTRICTS
+// DYNAMIC DISTRICTS (On-demand rendering for fast builds)
 export async function generateStaticParams() {
-  try {
-    const districts = await fetchDistrictsList();
-    return districts.map((district) => ({
-      district,
-    }));
-  } catch (error) {
-    console.error("District fetch error:", error);
-    return [];
-  }
+  return [];
 }
 
 // SEO METADATA
