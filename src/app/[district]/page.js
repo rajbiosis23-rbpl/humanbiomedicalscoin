@@ -1,7 +1,7 @@
 import Hero from "@/components/home/Hero";
 import Stats from "@/components/home/Stats";
 import WhyChoose from "@/components/home/WhyChoose";
-// import ProductShowcase from "@/components/home/ProductShowcase";
+// import ProductShowcase from "@/components/home/itemshowcase";
 import Testimonials from "@/components/home/Testimonials";
 // import FAQ from "@/components/home/FAQ";
 // import Newsletter from "@/components/home/Newsletter";

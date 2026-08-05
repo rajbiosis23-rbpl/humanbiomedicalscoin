@@ -52,7 +52,7 @@ export async function generateMetadata({
 
         alternates: {
             canonical:
-                `https://humanbiomedicals.co.in/${district}/products/${slug}`,
+                `https://humanbiomedicals.co.in/${district}/items/${slug}`,
         },
 
         openGraph: {
@@ -60,7 +60,7 @@ export async function generateMetadata({
             description,
 
             url:
-                `https://humanbiomedicals.co.in/${district}/products/${slug}`,
+                `https://humanbiomedicals.co.in/${district}/items/${slug}`,
 
             siteName:
                 "Human Biomedicals ",

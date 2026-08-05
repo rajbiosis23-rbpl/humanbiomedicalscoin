@@ -358,7 +358,7 @@ export default function ProductDetailsPage({
                                             borderRadius: 8,
                                             border:
                                                 selectedImage === img
-                                                    ? "2px solid #2563eb"
+                                                    ? "2px solid #9b111e"
                                                     : "1px solid #ddd",
                                         }}
                                     />
@@ -379,7 +379,7 @@ export default function ProductDetailsPage({
                                             cursor: "pointer",
                                             border:
                                                 selectedMedia === "video"
-                                                    ? "2px solid #2563eb"
+                                                    ? "2px solid #9b111e"
                                                     : "1px solid #ddd",
                                             position: "relative",
                                         }}

@@ -1,63 +1,28 @@
 import ProductsPage from "@/app/items/page";
-
-import {
-  collection,
-  getDocs,
-} from "firebase/firestore";
-
-import { db } from "@/lib/firebase";
+import { fetchDistrictsList } from "@/lib/data-fetcher";
 
 // FIREBASE DISTRICTS
 export async function generateStaticParams() {
   try {
-    const snapshot =
-      await getDocs(
-        collection(
-          db,
-          "websites",
-          "humanbiomedicalscoin",
-          "districts"
-        )
-      );
-
-    return snapshot.docs.map(
-      (doc) => ({
-        district: doc.id,
-      })
-    );
+    const districts = await fetchDistrictsList();
+    return districts.map((district) => ({
+      district,
+    }));
   } catch (error) {
-    console.error(
-      "District fetch error:",
-      error
-    );
-
+    console.error("District fetch error:", error);
     return [];
   }
 }
 
 // SEO METADATA
-export async function generateMetadata({
-  params,
-}) {
-
-  const resolvedParams =
-    await params;
-
-  const district =
-    resolvedParams?.district ||
-    "";
+export async function generateMetadata({ params }) {
+  const district = params?.district || "";
 
   const city = district
     .replace(/-/g, " ")
-    .replace(
-      /\b\w/g,
-      (char) =>
-        char.toUpperCase()
-    );
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 
-  // 35+ SEO KEYWORDS
   const keywords = [
-
     `maglumi machine in ${city}`,
     `maglumi machine supplier ${city}`,
     `cbc machine in ${city}`,
@@ -95,69 +60,37 @@ export async function generateMetadata({
     `best biomedical supplier ${city}`,
   ];
 
-  console.log(
-    "SEO Keywords:",
-    keywords
-  );
-
   return {
-    title:
-      `Maglumi Machine in ${city} | Biomedical Products in ${city} | Human Biomedicals`,
-
-    description:
-      `Buy Maglumi machine, CBC analyzer, Elisa reader, pathology lab equipment, biomedical products and hospital diagnostic machines in ${city}. Trusted supplier Human Biomedicals.`,
-
+    title: `Maglumi Machine in ${city} | Biomedical Products in ${city} | Human Biomedicals`,
+    description: `Buy Maglumi machine, CBC analyzer, Elisa reader, pathology lab equipment, biomedical products and hospital diagnostic machines in ${city}. Trusted supplier Human Biomedicals.`,
     keywords,
 
     alternates: {
-      canonical:
-        `https://humanbiomedicals.co.in/${district}/items`,
+      canonical: `https://humanbiomedicals.co.in/${district}/items`,
     },
 
     openGraph: {
-      title:
-        `Biomedical Products in ${city} | Human Biomedicals`,
-
-      description:
-        `Top biomedical products, Maglumi machines, pathology lab and diagnostic equipment supplier in ${city}.`,
-
-      url:
-        `https://humanbiomedicals.co.in/${district}/items`,
-
-      siteName:
-        "Human Biomedicals",
-
-      locale:
-        "en_IN",
-
-      type:
-        "website",
-
+      title: `Biomedical Products in ${city} | Human Biomedicals`,
+      description: `Top biomedical products, Maglumi machines, pathology lab and diagnostic equipment supplier in ${city}.`,
+      url: `https://humanbiomedicals.co.in/${district}/items`,
+      siteName: "Human Biomedicals",
+      locale: "en_IN",
+      type: "website",
       images: [
         {
-          url:
-            "/images/logo.png",
+          url: "/images/logo.png",
           width: 1200,
           height: 630,
-          alt:
-            `Biomedical Products in ${city}`,
+          alt: `Biomedical Products in ${city}`,
         },
       ],
     },
 
     twitter: {
-      card:
-        "summary_large_image",
-
-      title:
-        `Biomedical Products in ${city} | Human Biomedicals`,
-
-      description:
-        `Trusted biomedical and pathology equipment supplier in ${city}.`,
-
-      images: [
-        "/images/logo.png",
-      ],
+      card: "summary_large_image",
+      title: `Biomedical Products in ${city} | Human Biomedicals`,
+      description: `Trusted biomedical and pathology equipment supplier in ${city}.`,
+      images: ["/images/logo.png"],
     },
 
     robots: {
@@ -171,27 +104,16 @@ export async function generateMetadata({
   };
 }
 
-export default async function Page({
-  params,
-}) {
-
-  const resolvedParams =
-    await params;
-
-  const district =
-    resolvedParams?.district ||
-    "";
+export default function Page({ params }) {
+  const district = params?.district || "";
 
   const city = district
     .replace(/-/g, " ")
-    .replace(
-      /\b\w/g,
-      (char) =>
-        char.toUpperCase()
-    );
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 
   return (
     <ProductsPage
+      district={district}
       city={city}
     />
   );

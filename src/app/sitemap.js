@@ -64,7 +64,7 @@ export default async function sitemap() {
             );
 
         urls.push({
-          url: `${BASE_URL}/${district}/products/${slug}`,
+          url: `${BASE_URL}/${district}/items/${slug}`,
 
           lastModified:
             new Date(),
@@ -93,7 +93,7 @@ export default async function sitemap() {
             url: `${BASE_URL}/${district}/services`,
           },
           {
-            url: `${BASE_URL}/${district}/products`,
+            url: `${BASE_URL}/${district}/items`,
           }
         );
       }

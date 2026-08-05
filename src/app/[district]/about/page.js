@@ -1,9 +1,5 @@
 import AboutPage from "@/app/about/page";
-import {
-  collection,
-  getDocs,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { fetchDistrictsList } from "@/lib/data-fetcher";
 
 // SEO
 export async function generateMetadata({
@@ -60,20 +56,10 @@ export async function generateMetadata({
 // DYNAMIC DISTRICTS
 export async function generateStaticParams() {
   try {
-    const snapshot = await getDocs(
-      collection(
-        db,
-        "websites",
-        "humanbiomedicalscoin",
-        "districts"
-      )
-    );
-
-    return snapshot.docs.map(
-      (doc) => ({
-        district: doc.id,
-      })
-    );
+    const districts = await fetchDistrictsList();
+    return districts.map((district) => ({
+      district,
+    }));
   } catch (error) {
     console.error(
       "District fetch error:",
