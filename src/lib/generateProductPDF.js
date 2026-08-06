@@ -186,16 +186,26 @@ export async function generateProductPDF(product, activeImageUrl = "", city = "I
     const borderLineColor = [153, 246, 228]; // Soft Cyan Border (#99f6e4)
 
     // ==========================================
-    // FULL PAGE WATERMARK ("HUMAN BIOMEDICALS")
+    // FULL PAGE TILED WATERMARK ("HUMAN BIOMEDICALS")
     // ==========================================
-    doc.setTextColor(240, 240, 240); // Faint subtle background watermark
+    doc.setTextColor(238, 238, 238); // Faint subtle background watermark
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(44);
-    doc.text("HUMAN BIOMEDICALS", pageWidth / 2, pageHeight / 2 + 10, {
-        align: "center",
-        angle: 45,
-        rotationDirection: 0,
-    });
+    doc.setFontSize(10);
+
+    const wmText = "HUMAN BIOMEDICAL LLP";
+    const xStep = 60;
+    const yStep = 30;
+
+    for (let y = -10; y <= pageHeight + 20; y += yStep) {
+        const rowIdx = Math.round(y / yStep);
+        const xOffset = (rowIdx % 2 === 0) ? 0 : xStep / 2;
+        for (let x = -20 + xOffset; x <= pageWidth + 30; x += xStep) {
+            doc.text(wmText, x, y, {
+                align: "center",
+                angle: 45,
+            });
+        }
+    }
 
     // ==========================================
     // 1. TOP HEADER BANNER
@@ -223,15 +233,14 @@ export async function generateProductPDF(product, activeImageUrl = "", city = "I
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(15);
-    doc.text("Human Biomedicals", logoEndX, 18.5);
+    doc.text("Human Biomedical LLP", logoEndX, 18.5);
 
     // Contact info in top header (Right aligned)
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.text("Email: info@humanbiomedicals.co.in", pageWidth - 14, 11, { align: "right" });
-    doc.text("Phone: +91 9876543210", pageWidth - 14, 16, { align: "right" });
-    doc.text("Web: www.humanbiomedicals.co.in", pageWidth - 14, 21, { align: "right" });
+    doc.text("Phone: +91 9251598228", pageWidth - 14, 14, { align: "right" });
+    doc.text("Web: www.humanbiomedicals.co.in", pageWidth - 14, 20, { align: "right" });
 
     let currentY = 44;
 
@@ -329,7 +338,7 @@ export async function generateProductPDF(product, activeImageUrl = "", city = "I
     doc.text("KEY SPECIFICATIONS", rightColX + 6, sectionTopY + 6.5);
 
     const specs = [
-        { label: "Brand", value: product.brand || "Human Biomedicals Partner" },
+        { label: "Brand", value: product.brand || "Human Biomedical LLP Partner" },
         { label: "Model", value: product.model || "N/A" },
         { label: "Instrument", value: product.instrument || "Diagnostic Equipment" },
         { label: "Usage", value: product.usage || "Clinical Laboratory" },
@@ -435,7 +444,7 @@ export async function generateProductPDF(product, activeImageUrl = "", city = "I
     doc.setTextColor(...brightGold);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    doc.text("WHY CHOOSE HUMAN BIOMEDICALS", 14 + boxWidth + 10, currentY + 5.5);
+    doc.text("WHY CHOOSE HUMAN BIOMEDICAL LLP", 14 + boxWidth + 10, currentY + 5.5);
 
     const whyUs = [
         "Trusted Biomedical Equipment Supplier",
@@ -469,7 +478,7 @@ export async function generateProductPDF(product, activeImageUrl = "", city = "I
     doc.setTextColor(...primaryBlue);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8.5);
-    doc.text("HUMAN BIOMEDICALS - Diagnostic Instruments & Healthcare Solutions", 14, footerY + 7);
+    doc.text("HUMAN BIOMEDICAL LLP - Diagnostic Instruments & Healthcare Solutions", 14, footerY + 7);
 
     doc.setTextColor(...grayTextColor);
     doc.setFont("helvetica", "normal");

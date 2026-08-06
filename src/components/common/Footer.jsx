@@ -22,6 +22,13 @@ import {
 
 import { db } from "@/lib/firebase";
 
+import {
+  FaLinkedin,
+  FaFacebook,
+  FaInstagram,
+  FaWhatsapp,
+} from "react-icons/fa";
+
 import "./footer.css";
 
 export default function Footer() {
@@ -166,13 +173,7 @@ export default function Footer() {
     )?.value;
 
   // FIND PHONE
-  const phone =
-    contactInfo.find(
-      (item) =>
-        item.label
-          ?.toLowerCase()
-          ?.includes("phone")
-    )?.value;
+  const phone = "+91 9251598228";
 
   // FIND ADDRESS
   const address =
@@ -191,7 +192,7 @@ export default function Footer() {
 
         <div className="footer-top">
 
-          {/* LOGO */}
+          {/* LOGO & SOCIALS */}
           <div>
 
             <h2 className="footer-logo gradient-text">
@@ -209,6 +210,46 @@ export default function Footer() {
               professionals.
 
             </p>
+
+            <div className="footer-socials">
+
+              <a
+                href="https://www.linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+              >
+                <FaLinkedin />
+              </a>
+
+              <a
+                href="https://www.facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+              >
+                <FaFacebook />
+              </a>
+
+              <a
+                href="https://www.instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+              >
+                <FaInstagram />
+              </a>
+
+              <a
+                href="https://wa.me/919251598228"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="WhatsApp"
+              >
+                <FaWhatsapp />
+              </a>
+
+            </div>
 
           </div>
 
@@ -245,29 +286,33 @@ export default function Footer() {
 
           </div>
 
-          {/* SERVICES */}
+          {/* CATEGORIES / SERVICES */}
           <div>
 
             <h3 className="footer-title">
-              Services
+              Categories
             </h3>
 
             <div className="footer-links">
 
-              <Link href="#">
-                Biomedical Equipment
+              <Link href={`${basePath}/items?category=Biochemistry`}>
+                Biochemistry Analyzers
               </Link>
 
-              <Link href="#">
-                Diagnostics
+              <Link href={`${basePath}/items?category=CLIA`}>
+                CLIA & Immunoassay
               </Link>
 
-              <Link href="#">
-                Lab Solutions
+              <Link href={`${basePath}/items?category=Hematology`}>
+                Hematology Analyzers
               </Link>
 
-              <Link href="#">
-                Healthcare Support
+              <Link href={`${basePath}/items?category=Electrolyte`}>
+                Electrolyte & Urine
+              </Link>
+
+              <Link href={`${basePath}/items?category=Rapid`}>
+                Rapid Diagnostic Kits
               </Link>
 
             </div>
@@ -289,11 +334,7 @@ export default function Footer() {
             </p>
 
             <p>
-              📞 {phone}
-            </p>
-
-            <p>
-              ✉ {email}
+              📞 {phone || "+91 9251598228"}
             </p>
 
           </div>

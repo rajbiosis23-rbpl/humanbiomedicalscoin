@@ -222,6 +222,20 @@ export default function ProductsClient({ initialProducts = [], district = null, 
   const [pendingScroll, setPendingScroll] = useState(null);
   const [showTopButton, setShowTopButton] = useState(false);
 
+  // Read category / search URL parameters on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const catParam = params.get("category") || params.get("search");
+      if (catParam) {
+        setSearchInput(catParam);
+        setProductSearch(catParam);
+        setOpenedCategory(catParam);
+        setActiveCategory(catParam);
+      }
+    }
+  }, []);
+
   // Debounce search term updates to make search typing instant
   useEffect(() => {
     const timer = setTimeout(() => {

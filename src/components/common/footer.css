@@ -59,6 +59,35 @@
   word-break: break-word;
 }
 
+.footer-socials {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.footer-socials a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.footer-socials a:hover {
+  background: #f4b400;
+  color: #111;
+  transform: translateY(-3px);
+  border-color: #f4b400;
+  box-shadow: 0 6px 15px rgba(244, 180, 0, 0.3);
+}
+
 .footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 25px 0;

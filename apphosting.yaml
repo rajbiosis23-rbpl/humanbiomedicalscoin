@@ -2,6 +2,12 @@ runConfig:
   minInstances: 0
 
 env:
+  - variable: FIREBASE_PROJECT_ID
+    value: rajbiosis-central
+    availability:
+      - BUILD
+      - RUNTIME
+
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: rajbiosis-central
     availability:
@@ -11,11 +17,9 @@ env:
   - variable: FIREBASE_CLIENT_EMAIL
     secret: FIREBASE_CLIENT_EMAIL
     availability:
-      - BUILD
       - RUNTIME
 
   - variable: FIREBASE_PRIVATE_KEY
     secret: FIREBASE_PRIVATE_KEY
     availability:
-      - BUILD
       - RUNTIME

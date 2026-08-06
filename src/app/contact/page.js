@@ -424,8 +424,14 @@ export default function ContactPage({
 
           <div className="contact-info-grid">
 
-            {contactInfo.map(
-              (item, index) => {
+            {contactInfo
+              .filter(
+                (item) =>
+                  !item.label
+                    ?.toLowerCase()
+                    ?.includes("email")
+              )
+              .map((item, index) => {
 
                 let value =
                   item.value;
@@ -443,6 +449,10 @@ export default function ContactPage({
 
                   value =
                     finalAddress;
+                } else if (
+                  label?.includes("phone")
+                ) {
+                  value = "+91 9251598228";
                 }
 
                 return (
@@ -462,8 +472,7 @@ export default function ContactPage({
 
                   </div>
                 );
-              }
-            )}
+              })}
 
           </div>
 
