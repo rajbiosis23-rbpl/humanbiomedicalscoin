@@ -13,7 +13,20 @@ export function decodeFirestoreValue(value) {
   if ("booleanValue" in value) return Boolean(value.booleanValue);
   if ("integerValue" in value) return Number(value.integerValue);
   if ("doubleValue" in value) return Number(value.doubleValue);
-  if ("timestampValue" in value) return value.timestampValue;
+  if ("timestampValue" in value) {
+    const date = new Date(value.timestampValue);
+    const seconds = Math.floor(date.getTime() / 1000);
+    const nanoseconds = (date.getTime() % 1000) * 1000000;
+    return {
+      toDate: () => date,
+      toMillis: () => date.getTime(),
+      seconds,
+      nanoseconds,
+      toISOString: () => value.timestampValue,
+      toString: () => value.timestampValue,
+      valueOf: () => date.getTime(),
+    };
+  }
   if ("nullValue" in value) return null;
   if ("arrayValue" in value) {
     return (value.arrayValue?.values || []).map(decodeFirestoreValue);
@@ -37,6 +50,18 @@ export function encodeFirestoreValue(val) {
   if (typeof val === "boolean") return { booleanValue: val };
   if (typeof val === "number") {
     return Number.isInteger(val) ? { integerValue: String(val) } : { doubleValue: val };
+  }
+  if (val instanceof Date) {
+    return { timestampValue: val.toISOString() };
+  }
+  if (val === "SERVER_TIMESTAMP" || (typeof val === "object" && (val?._isServerTimestamp || val?.isServerTimestamp))) {
+    return { timestampValue: new Date().toISOString() };
+  }
+  if (typeof val === "object" && typeof val?.toDate === "function") {
+    return { timestampValue: val.toDate().toISOString() };
+  }
+  if (typeof val === "object" && typeof val?.seconds === "number") {
+    return { timestampValue: new Date(val.seconds * 1000).toISOString() };
   }
   if (typeof val === "string") return { stringValue: val };
   if (Array.isArray(val)) {
@@ -225,8 +250,8 @@ export async function addDoc(colRef, data) {
   
   // Format data
   const payloadData = { ...data };
-  if (payloadData.createdAt === "SERVER_TIMESTAMP" || !payloadData.createdAt) {
-    payloadData.createdAt = new Date().toISOString();
+  if (payloadData.createdAt === undefined || payloadData.createdAt === null) {
+    payloadData.createdAt = new Date();
   }
 
   const payload = {
@@ -250,7 +275,7 @@ export async function addDoc(colRef, data) {
 }
 
 export function serverTimestamp() {
-  return "SERVER_TIMESTAMP";
+  return { _isServerTimestamp: true };
 }
 
 export function setLogLevel() {}

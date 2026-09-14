@@ -91,13 +91,9 @@ export default async function Page({
     const { slug, district } =
         await params;
 
-    const allProducts = await fetchFullCatalog();
-    const product = findProductBySlug(allProducts, slug);
-
     return (
         <ProductDetails
             slug={slug}
-            product={product}
             district={district}
         />
     );

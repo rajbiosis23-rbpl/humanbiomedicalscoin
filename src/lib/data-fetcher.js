@@ -12,8 +12,16 @@ export const makeSlug = (text = "") =>
     .replace(/\s+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+function safeDecode(str = "") {
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    return str;
+  }
+}
+
 export const normalizeSlug = (s = "") =>
-  decodeURIComponent(String(s || ""))
+  safeDecode(String(s || ""))
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, "")
