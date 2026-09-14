@@ -43,40 +43,53 @@
 
 // export { adminDb };
 
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { db } from "./firebase";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
-const projectId =
-  process.env.FIREBASE_PROJECT_ID ||
-  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-  "rajbiosis-central";
-
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-
-let adminDb = null;
-
-if (projectId && clientEmail && privateKey) {
-  try {
-    const app =
-      getApps().length === 0
-        ? initializeApp({
-            credential: cert({
-              projectId,
-              clientEmail,
-              privateKey,
-            }),
-          })
-        : getApps()[0];
-
-    adminDb = getFirestore(app);
-  } catch (err) {
-    console.error("Firebase Admin initialization error:", err);
-  }
-} else {
-  console.warn(
-    "Firebase Admin environment variables missing or incomplete during build. Fallback gracefully."
-  );
+/**
+ * Edge-compatible Firestore wrapper that mimics firebase-admin Firestore API
+ * using standard web-friendly Firebase JS SDK for Cloudflare Workers compatibility.
+ */
+function createRef(...segments) {
+  return {
+    collection: (name) => createRef(...segments, name),
+    doc: (id) => createRef(...segments, id),
+    get: async () => {
+      try {
+        if (segments.length % 2 === 0) {
+          // Document path (e.g. websites/humanbiomedicalscoin/pages/products)
+          const docRef = doc(db, ...segments);
+          const snap = await getDoc(docRef);
+          return {
+            exists: snap.exists(),
+            id: snap.id,
+            data: () => snap.data() || {},
+          };
+        } else {
+          // Collection path (e.g. websites/humanbiomedicalscoin/districts)
+          const colRef = collection(db, ...segments);
+          const snap = await getDocs(colRef);
+          return {
+            docs: snap.docs.map((d) => ({
+              id: d.id,
+              data: () => d.data() || {},
+            })),
+          };
+        }
+      } catch (err) {
+        console.error("Firestore read error in firebaseAdmin wrapper:", err);
+        return {
+          exists: false,
+          id: "",
+          data: () => ({}),
+          docs: [],
+        };
+      }
+    },
+  };
 }
 
-export { adminDb };
+export const adminDb = {
+  collection: (name) => createRef(name),
+  doc: (id) => createRef(id),
+};
