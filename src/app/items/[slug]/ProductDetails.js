@@ -17,8 +17,8 @@ import {
 import {
     addDoc,
     collection,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+    db,
+} from "@/lib/firebase";
 import { fetchFullCatalog } from "@/lib/data-fetcher";
 
 export default function ProductDetails({ slug, product: initialProduct }) {

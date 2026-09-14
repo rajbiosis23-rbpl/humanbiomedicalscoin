@@ -14,9 +14,8 @@ import {
   where,
   addDoc,
   serverTimestamp,
-} from "firebase/firestore";
-
-import { db } from "@/lib/firebase";
+  db,
+} from "@/lib/firebase";
 
 import toast, {
   Toaster,

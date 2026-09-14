@@ -1,5 +1,4 @@
-import { db } from "./firebase";
-import { doc, getDoc, getDocs, collection } from "firebase/firestore";
+import { db, doc, getDoc, getDocs, collection } from "./firebase.js";
 
 // Simple in-memory cache for Firestore documents and catalog
 const docCache = {};
