@@ -19,9 +19,9 @@ import {
     collection,
     db,
 } from "@/lib/firebase";
-import { fetchFullCatalog } from "@/lib/data-fetcher";
+import { fetchFullCatalog, findProductBySlug } from "@/lib/data-fetcher";
 
-export default function ProductDetails({ slug, product: initialProduct }) {
+export default function ProductDetails({ slug, product: initialProduct, district: initialDistrict }) {
     const [product, setProduct] = useState(initialProduct || null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [selectedImage, setSelectedImage] = useState(() => {
@@ -43,11 +43,18 @@ export default function ProductDetails({ slug, product: initialProduct }) {
     });
 
     const [submitting, setSubmitting] = useState(false);
-    const pathname = usePathname();
+    const pathname = usePathname() || "";
 
     const pathParts = pathname.split("/").filter(Boolean);
-    const city = pathParts.length > 1 ? pathParts[0] : "India";
-    const cityName = city.charAt(0).toUpperCase() + city.slice(1);
+    const detectedDistrict =
+        initialDistrict ||
+        (pathParts.length > 2 && pathParts[1] === "items"
+            ? pathParts[0]
+            : (pathParts.length > 1 && pathParts[0] !== "items" ? pathParts[0] : ""));
+    const city = detectedDistrict
+        ? detectedDistrict.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+        : "India";
+    const cityName = city;
 
     const handleDownloadPDF = async () => {
         if (!product || isGeneratingPDF) return;
@@ -80,7 +87,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
             try {
                 setLoading(true);
                 const allProducts = await fetchFullCatalog();
-                const found = allProducts.find((p) => p.slug === slug);
+                const found = findProductBySlug(allProducts, slug);
 
                 setProduct(found || null);
 

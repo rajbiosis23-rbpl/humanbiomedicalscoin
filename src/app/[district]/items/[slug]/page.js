@@ -1,4 +1,6 @@
-import ProductDetailsPage from "@/components/ProductDetailsPage";
+import ProductDetails from "@/app/items/[slug]/ProductDetails";
+import { fetchFullCatalog } from "@/lib/data-fetcher-server";
+import { findProductBySlug } from "@/lib/data-fetcher";
 
 export async function generateMetadata({
     params,
@@ -89,9 +91,13 @@ export default async function Page({
     const { slug, district } =
         await params;
 
+    const allProducts = await fetchFullCatalog();
+    const product = findProductBySlug(allProducts, slug);
+
     return (
-        <ProductDetailsPage
+        <ProductDetails
             slug={slug}
+            product={product}
             district={district}
         />
     );
