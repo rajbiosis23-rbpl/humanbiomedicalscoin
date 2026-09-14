@@ -6,10 +6,14 @@ export default async function sitemap() {
 
   let urls = [];
 
+  if (!adminDb) {
+    console.warn("sitemap.js: adminDb is null. Firebase credentials may be missing during build.");
+    return urls;
+  }
+
   try {
     // districts fetch
-    const districtSnap =
-      await adminDb
+    const districtSnap = await adminDb
         .collection(
           "websites"
         )
