@@ -23,7 +23,6 @@
     "@opentelemetry/api": "^1.9.1",
     "clsx": "^2.1.1",
     "firebase": "^12.13.0",
-    "firebase-admin": "^13.10.0",
     "framer-motion": "^12.39.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
