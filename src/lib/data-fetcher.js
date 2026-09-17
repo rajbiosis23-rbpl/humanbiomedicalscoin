@@ -1,16 +1,47 @@
-import { db } from "./firebase";
-import { doc, getDoc, getDocs, collection } from "firebase/firestore";
+import { db, doc, getDoc, getDocs, collection } from "./firebase.js";
 
 // Simple in-memory cache for Firestore documents and catalog
 const docCache = {};
 let catalogPromise = null;
 
-const makeSlug = (text = "") =>
-  text
+export const makeSlug = (text = "") =>
+  String(text || "")
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-");
+    .replace(/\s+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+function safeDecode(str = "") {
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    return str;
+  }
+}
+
+export const normalizeSlug = (s = "") =>
+  safeDecode(String(s || ""))
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+export function findProductBySlug(allProducts = [], slug = "") {
+  if (!slug || !allProducts || !allProducts.length) return null;
+  const target = normalizeSlug(slug);
+  return (
+    allProducts.find((p) => {
+      if (!p) return false;
+      if (normalizeSlug(p.slug) === target) return true;
+      if (normalizeSlug(p.title) === target) return true;
+      if (p.slug === slug || p.id === slug || p.uid === slug) return true;
+      return false;
+    }) || null
+  );
+}
+
 
 /**
  * Fetch a single document and cache its promise/data.

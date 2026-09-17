@@ -18,9 +18,8 @@ import {
   collection,
   query,
   where,
-} from "firebase/firestore";
-
-import { db } from "@/lib/firebase";
+  db,
+} from "@/lib/firebase";
 
 import {
   FaLinkedin,

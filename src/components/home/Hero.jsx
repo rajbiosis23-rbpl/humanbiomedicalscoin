@@ -4,9 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { doc, getDoc } from "firebase/firestore";
-
-import { db } from "@/lib/firebase";
+import { doc, getDoc, db } from "@/lib/firebase";
 import imageone from "@/components/home/img-1.png";
 
 import "./home.css";

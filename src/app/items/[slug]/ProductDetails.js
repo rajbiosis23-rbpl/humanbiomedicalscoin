@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import "./page.css"
 import { usePathname } from "next/navigation";
 
@@ -17,11 +17,12 @@ import {
 import {
     addDoc,
     collection,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { fetchFullCatalog } from "@/lib/data-fetcher";
+    db,
+    serverTimestamp,
+} from "@/lib/firebase";
+import { fetchFullCatalog, findProductBySlug } from "@/lib/data-fetcher";
 
-export default function ProductDetails({ slug, product: initialProduct }) {
+export default function ProductDetails({ slug, product: initialProduct, district: initialDistrict }) {
     const [product, setProduct] = useState(initialProduct || null);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [selectedImage, setSelectedImage] = useState(() => {
@@ -43,11 +44,18 @@ export default function ProductDetails({ slug, product: initialProduct }) {
     });
 
     const [submitting, setSubmitting] = useState(false);
-    const pathname = usePathname();
+    const pathname = usePathname() || "";
 
     const pathParts = pathname.split("/").filter(Boolean);
-    const city = pathParts.length > 1 ? pathParts[0] : "India";
-    const cityName = city.charAt(0).toUpperCase() + city.slice(1);
+    const detectedDistrict =
+        initialDistrict ||
+        (pathParts.length > 2 && pathParts[1] === "items"
+            ? pathParts[0]
+            : (pathParts.length > 1 && pathParts[0] !== "items" ? pathParts[0] : ""));
+    const city = detectedDistrict
+        ? detectedDistrict.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+        : "India";
+    const cityName = city;
 
     const handleDownloadPDF = async () => {
         if (!product || isGeneratingPDF) return;
@@ -80,7 +88,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
             try {
                 setLoading(true);
                 const allProducts = await fetchFullCatalog();
-                const found = allProducts.find((p) => p.slug === slug);
+                const found = findProductBySlug(allProducts, slug);
 
                 setProduct(found || null);
 
@@ -127,16 +135,18 @@ export default function ProductDetails({ slug, product: initialProduct }) {
                 collection(
                     db,
                     "websitesQueries",
-                    "centralbiomedicals",
+                    "humanbiomedicalscoin",
                     "productQueries"
                 ),
                 {
-                    ...form,
-                    productName: product.title,
-                    productSlug: product.slug,
-                    brand: product.brand || "",
-                    model: product.model || "",
-                    createdAt: new Date(),
+                    name: form.name.trim(),
+                    email: form.email.trim(),
+                    phone: form.phone.trim(),
+                    productName: product?.title || "",
+                    productSlug: product?.slug || slug || "",
+                    brand: product?.brand || "",
+                    model: product?.model || "",
+                    createdAt: serverTimestamp(),
                 }
             );
 
@@ -167,7 +177,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
                 product.title,
             brand: {
                 "@type": "Brand",
-                name: product.brand || "Central Biomedicals",
+                name: product.brand || "Human Biomedicals",
             },
         }
         : null;
@@ -254,7 +264,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
 
     if (loading) {
         return (
-            <section className="py-10 md:py-20 bg-red-500">
+            <section className="py-10 md:py-20 bg-slate-50">
                 <div className="container-custom">
                     <div className="grid lg:grid-cols-2 gap-12 animate-pulse">
                         <div className="h-[420px] md:h-[520px] rounded-[36px] bg-slate-200" />
@@ -286,6 +296,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
 
     return (
         <section className="product-page">
+            <Toaster position="top-right" />
 
             <script
                 type="application/ld+json"
@@ -529,63 +540,20 @@ export default function ProductDetails({ slug, product: initialProduct }) {
 
                         </div>
 
-                        <div className="product-info-card">
-
-                            <p>
-                                <b>Brand:</b>
-                                {product.brand || "N/A"}
-                            </p>
-
-                            <p>
-                                <b>Model:</b>
-                                {product.model || "N/A"}
-                            </p>
-
-                            <p>
-                                <b>Instrument:</b>
-                                {product.instrument || "N/A"}
-                            </p>
-
-                            <p>
-                                <b>Capacity:</b>
-                                {product.capacity || "N/A"}
-                            </p>
-
-                            <p>
-                                <b>Throughput:</b>
-                                {product.throughput || "N/A"}
-                            </p>
-
-                            <p>
-                                <b>Usage:</b>
-                                {product.usage || "N/A"}
-                            </p>
-
-                            <p>
-                                <b>Automation:</b>
-                                {product.automation || "N/A"}
-                            </p>
-
-                            <p>
-                                <b>Availability:</b>
-                                {product.availability || "N/A"}
-                            </p>
-
-                        </div>
 
                         {/* Download PDF Brochure CTA Button */}
                         <div style={{
-                          marginTop: "20px",
-                          padding: "16px 20px",
-                          borderRadius: "18px",
-                          background: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: "16px",
-                          flexWrap: "wrap"
+                            marginTop: "20px",
+                            padding: "16px 20px",
+                            borderRadius: "18px",
+                            background: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "16px",
+                            flexWrap: "wrap"
                         }}>
                             <div>
                                 <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#1e293b", margin: 0 }}>Product Specifications Brochure</h4>
@@ -596,18 +564,18 @@ export default function ProductDetails({ slug, product: initialProduct }) {
                                 onClick={handleDownloadPDF}
                                 disabled={isGeneratingPDF}
                                 style={{
-                                  padding: "10px 20px",
-                                  background: "linear-gradient(135deg, #9b111e, #d72638)",
-                                  color: "#ffffff",
-                                  fontWeight: "700",
-                                  fontSize: "13px",
-                                  borderRadius: "12px",
-                                  border: "none",
-                                  cursor: isGeneratingPDF ? "not-allowed" : "pointer",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  boxShadow: "0 6px 20px rgba(155, 17, 30, 0.2)"
+                                    padding: "10px 20px",
+                                    background: "linear-gradient(135deg, #9b111e, #d72638)",
+                                    color: "#ffffff",
+                                    fontWeight: "700",
+                                    fontSize: "13px",
+                                    borderRadius: "12px",
+                                    border: "none",
+                                    cursor: isGeneratingPDF ? "not-allowed" : "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    boxShadow: "0 6px 20px rgba(155, 17, 30, 0.2)"
                                 }}
                             >
                                 <span>📥</span>
@@ -764,11 +732,11 @@ export default function ProductDetails({ slug, product: initialProduct }) {
                                 <div className="seo-block">
 
                                     <h3>
-                                        Why Choose Central Biomedicals in {cityName}?
+                                        Why Choose Human Biomedicals in {cityName}?
                                     </h3>
 
                                     <p>
-                                        Central Biomedicals is a trusted supplier and
+                                        Human Biomedicals is a trusted supplier and
                                         distributor of {product.title} in {cityName}.
                                         We provide high-quality biomedical and laboratory
                                         equipment for hospitals, pathology laboratories,
@@ -813,7 +781,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
                                     </h3>
 
                                     <p>
-                                        Central Biomedicals supplies
+                                        Human Biomedicals supplies
                                         {product.title}
                                         in {cityName} with technical support,
                                         installation assistance and customer
@@ -829,7 +797,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
                                     </h3>
 
                                     <p>
-                                        Central Biomedicals is a trusted dealer of
+                                        Human Biomedicals is a trusted dealer of
                                         {product.title} in {cityName}. We supply
                                         biomedical equipment, laboratory instruments,
                                         diagnostic analyzers and healthcare devices
@@ -863,7 +831,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
                                     <p>
                                         Buy high quality {product.title}
                                         in {cityName} at competitive prices.
-                                        Contact Central Biomedicals for the
+                                        Contact Human Biomedicals for the
                                         latest quotation and product availability.
                                     </p>
 
@@ -1005,7 +973,7 @@ export default function ProductDetails({ slug, product: initialProduct }) {
                                     <div className="faq-item">
 
                                         <h4>
-                                            How can I contact Central Biomedicals?
+                                            How can I contact Human Biomedicals?
                                         </h4>
 
                                         <p>

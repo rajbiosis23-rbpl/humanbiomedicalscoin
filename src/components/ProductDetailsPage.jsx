@@ -8,12 +8,8 @@ import {
     addDoc,
     collection,
     serverTimestamp,
-} from "firebase/firestore";
-import {
-    FaShareAlt,
-    FaPlay,
-} from "react-icons/fa";
-import { db } from "@/lib/firebase";
+    db,
+} from "@/lib/firebase";
 
 import toast, {
     Toaster,

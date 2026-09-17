@@ -13,8 +13,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { motion } from "framer-motion";
-
 import ProductCard from "../../components/common/ProductCard";
+import { fetchFullCatalog } from "@/lib/data-fetcher";
 
 // 1. Memoized Product Link Component
 const ProductLink = memo(function ProductLink({ item, category, scrollToProduct }) {
@@ -213,6 +213,8 @@ const CategoryItem = memo(function CategoryItem({
 });
 
 export default function ProductsClient({ initialProducts = [], district = null, city = null }) {
+  const [products, setProducts] = useState(initialProducts);
+  const [loading, setLoading] = useState(initialProducts.length === 0);
   const [categorySearch, setCategorySearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [productSearch, setProductSearch] = useState("");
@@ -221,6 +223,27 @@ export default function ProductsClient({ initialProducts = [], district = null, 
   const [openedSubCategories, setOpenedSubCategories] = useState({});
   const [pendingScroll, setPendingScroll] = useState(null);
   const [showTopButton, setShowTopButton] = useState(false);
+
+  useEffect(() => {
+    if (initialProducts && initialProducts.length > 0) {
+      setProducts(initialProducts);
+      setLoading(false);
+    } else if (products.length === 0) {
+      setLoading(true);
+      fetchFullCatalog()
+        .then((data) => {
+          if (data && data.length > 0) {
+            setProducts(data);
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching catalog on client:", err);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [initialProducts]);
 
   // Read category / search URL parameters on mount
   useEffect(() => {
@@ -247,8 +270,8 @@ export default function ProductsClient({ initialProducts = [], district = null, 
   // Combined single-pass product filtering, grouping, category count, and sorting for maximum performance
   const { filteredProducts, sortedGroupedProducts, categoryCounts } = useMemo(() => {
     const query = productSearch.trim().toLowerCase();
-    const firstSlug = initialProducts[0]?.slug || "";
-    const cacheKey = `${initialProducts.length}-${firstSlug}-${query}`;
+    const firstSlug = products[0]?.slug || "";
+    const cacheKey = `${products.length}-${firstSlug}-${query}`;
 
     if (!globalThis._productsMemoCache) {
       globalThis._productsMemoCache = new Map();
@@ -260,7 +283,7 @@ export default function ProductsClient({ initialProducts = [], district = null, 
 
     const start = performance.now();
     const filtered = query
-      ? initialProducts.filter((item) => {
+      ? products.filter((item) => {
         const title = (item.title || "").toLowerCase();
         const brand = (item.brand || "").toLowerCase();
         const model = (item.model || "").toLowerCase();
@@ -275,7 +298,7 @@ export default function ProductsClient({ initialProducts = [], district = null, 
           subCategory.includes(query)
         );
       })
-      : initialProducts;
+      : products;
 
     const grouped = {};
     const counts = {};
@@ -603,11 +626,28 @@ export default function ProductsClient({ initialProducts = [], district = null, 
 
             {/* RIGHT SIDE START */}
             <div className="products-content">
-
-              {filteredProducts.length === 0 ? (
-
+              {loading ? (
+                <div className="space-y-6">
+                  {[...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-white rounded-[30px] border border-slate-200 p-8 animate-pulse flex flex-col md:flex-row gap-6"
+                    >
+                      <div className="w-full md:w-[240px] h-[180px] bg-slate-200 rounded-2xl" />
+                      <div className="flex-1 space-y-4">
+                        <div className="h-8 bg-slate-200 rounded-xl w-2/3" />
+                        <div className="h-4 bg-slate-200 rounded w-full" />
+                        <div className="h-4 bg-slate-200 rounded w-4/5" />
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          <div className="h-16 bg-slate-100 rounded-xl" />
+                          <div className="h-16 bg-slate-100 rounded-xl" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredProducts.length === 0 ? (
                 <div className="no-products">
-
                   <div className="no-products-icon">
                     🔍
                   </div>
@@ -617,17 +657,11 @@ export default function ProductsClient({ initialProducts = [], district = null, 
                   </h2>
 
                   <p className="no-products-text">
-
                     {"We couldn't find any products matching"}
-
                     <span className="highlight-search">
-
                       {" \"" + productSearch + "\" "}
-
                     </span>
-
                     . Please try another keyword or browse categories.
-
                   </p>
 
                   <button
@@ -637,13 +671,9 @@ export default function ProductsClient({ initialProducts = [], district = null, 
                     }}
                     className="view-all-btn"
                   >
-
                     View All Products
-
                   </button>
-
                 </div>
-
               ) : (
 
                 Object.entries(sortedGroupedProducts).map(

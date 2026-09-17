@@ -9,10 +9,9 @@ import Link from "next/link";
 
 import {
   doc,
-  getDoc
-} from "firebase/firestore";
-
-import { db } from "@/lib/firebase";
+  getDoc,
+  db,
+} from "@/lib/firebase";
 
 import "./services.css";
 

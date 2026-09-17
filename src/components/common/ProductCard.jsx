@@ -2,6 +2,10 @@ import React from "react";
 import Link from "next/link";
 
 const ProductCard = React.memo(function ProductCard({ product, district }) {
+  const productUrl = district
+    ? `/${district}/items/${product.slug}`
+    : `/items/${product.slug}`;
+
   return (
     <div
       id={product.slug}
@@ -9,7 +13,10 @@ const ProductCard = React.memo(function ProductCard({ product, district }) {
     >
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_220px] gap-8 items-center">
         {/* Image */}
-        <div className="relative h-[180px] sm:h-[220px] rounded-2xl lg:rounded-3xl overflow-hidden bg-slate-100">
+        <Link
+          href={productUrl}
+          className="relative block h-[180px] sm:h-[220px] rounded-2xl lg:rounded-3xl overflow-hidden bg-slate-100 hover:opacity-90 transition-opacity"
+        >
           <img
             src={product.images?.[0] || product.image || "/placeholder.jpg"}
             alt={product.title}
@@ -20,13 +27,15 @@ const ProductCard = React.memo(function ProductCard({ product, district }) {
               e.currentTarget.src = "/placeholder.jpg";
             }}
           />
-        </div>
+        </Link>
 
         {/* Content */}
         <div>
-          <h3 className="text-2xl font-bold text-slate-900">
-            {product.title}
-          </h3>
+          <Link href={productUrl}>
+            <h3 className="text-2xl font-bold text-slate-900 hover:text-[#b03333] transition-colors cursor-pointer">
+              {product.title}
+            </h3>
+          </Link>
 
           <p className="mt-4 text-slate-600 leading-8">
             {product.description ||

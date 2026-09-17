@@ -96,12 +96,13 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function Page({ params }) {
-  const district = params?.district || "";
+export default async function Page({ params }) {
+  const resolvedParams = await params;
+  const district = resolvedParams?.district || "";
 
   const city = district
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    ? district.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+    : "";
 
   return (
     <ProductsPage

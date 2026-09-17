@@ -1,5 +1,6 @@
 import ProductDetails from "./ProductDetails";
 import { fetchFullCatalog } from "@/lib/data-fetcher-server";
+import { findProductBySlug } from "@/lib/data-fetcher";
 
 export async function generateMetadata({ params }) {
     const { slug } = await params;
@@ -8,11 +9,11 @@ export async function generateMetadata({ params }) {
         ?.replace(/-/g, " ")
         ?.replace(/\b\w/g, (c) => c.toUpperCase());
 
-    const title = `${productName} Supplier in India | Price, Dealer & Distributor | Central Biomedicals`;
+    const title = `${productName} Supplier in India | Price, Dealer & Distributor | Human Biomedicals`;
 
-    const description = `Buy ${productName} at best price in India. Trusted supplier, dealer and distributor of ${productName} for hospitals, laboratories, diagnostic centers, research institutes and healthcare facilities. Contact Central Biomedicals for latest quotation and product details.`;
+    const description = `Buy ${productName} at best price in India. Trusted supplier, dealer and distributor of ${productName} for hospitals, laboratories, diagnostic centers, research institutes and healthcare facilities. Contact Human Biomedicals for latest quotation and product details.`;
 
-    const url = `https://centralbiomedicals.com/items/${slug}`;
+    const url = `https://humanbiomedicals.co.in.com/items/${slug}`;
 
     return {
         title,
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }) {
             "Diagnostic Equipment",
             "Hospital Equipment",
             "Healthcare Equipment",
-            "Central Biomedicals",
+            "Human Biomedicals",
         ],
 
         alternates: {
@@ -51,7 +52,7 @@ export async function generateMetadata({ params }) {
             title,
             description,
             url,
-            siteName: "Central Biomedicals",
+            siteName: "Human Biomedicals",
             type: "website",
             locale: "en_IN",
         },
@@ -74,14 +75,11 @@ export async function generateMetadata({ params }) {
             },
         },
 
-        metadataBase: new URL("https://centralbiomedials.com"),
+        metadataBase: new URL("https://humanbiomedicals.co.in"),
     };
 }
 
 export default async function Page({ params }) {
     const { slug } = await params;
-    const allProducts = await fetchFullCatalog();
-    const product = allProducts.find((p) => p.slug === slug) || null;
-
-    return <ProductDetails slug={slug} product={product} />;
+    return <ProductDetails slug={slug} />;
 }

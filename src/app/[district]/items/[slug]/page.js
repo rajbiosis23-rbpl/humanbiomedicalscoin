@@ -1,4 +1,6 @@
-import ProductDetailsPage from "@/components/ProductDetailsPage";
+import ProductDetails from "@/app/items/[slug]/ProductDetails";
+import { fetchFullCatalog } from "@/lib/data-fetcher-server";
+import { findProductBySlug } from "@/lib/data-fetcher";
 
 export async function generateMetadata({
     params,
@@ -90,7 +92,7 @@ export default async function Page({
         await params;
 
     return (
-        <ProductDetailsPage
+        <ProductDetails
             slug={slug}
             district={district}
         />
