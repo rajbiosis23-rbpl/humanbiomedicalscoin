@@ -191,11 +191,8 @@ export default async function DistrictPage({
   return (
     <>
       <Hero city={city} />
-
       <HomeBanner city={city} />
-
       <Stats />
-
       <WhyChoose />
 
       {/* <ProductShowcase /> */}
