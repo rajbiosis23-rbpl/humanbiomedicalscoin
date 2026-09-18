@@ -1,325 +1,124 @@
 import { NextResponse } from "next/server";
+import { fetchFullCatalogData } from "@/lib/db-server";
 import { adminDb } from "@/lib/firebaseAdmin";
 
-const WEBSITE = "humanbiomedicalscoin";
 const DOMAIN = "https://humanbiomedicals.co.in";
+const WEBSITE = "humanbiomedicalscoin";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export async function GET() {
-    try {
+  try {
+    const catalogData = await fetchFullCatalogData();
+    const categories = catalogData.categoryList || [];
+    const products = catalogData.categoryProducts || [];
 
-        // Firestore Check
-        if (!adminDb) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: "Firestore is not initialized. Check firebaseAdmin.js and your ENV variables."
-                },
-                {
-                    status: 500,
-                }
-            );
-        }
+    // Districts
+    let districts = [];
+    if (adminDb) {
+      const districtSnap = await adminDb
+        .collection("websites")
+        .doc(WEBSITE)
+        .collection("districts")
+        .get();
+      districts = districtSnap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    }
 
-        console.log("✅ Firestore Connected");
+    const publishedProducts = products.filter((p) => p.isPublished !== false);
 
-        // Districts
-        const districtSnap = await adminDb
-            .collection("websites")
-            .doc(WEBSITE)
-            .collection("districts")
-            .get();
+    // Format Categories Text
+    const categoryText =
+      categories.length > 0
+        ? categories
+            .map((cat) => {
+              const subs = cat.subcategories || [];
+              const subText = subs
+                .map((s) => `  - Subcategory: ${s.name || s.subCategory}`)
+                .join("\n");
 
-        const districts = districtSnap.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
+              return `## ${cat.name || cat.category}\n- Category Slug: ${cat.slug || cat.id}\n- Subcategories:\n${subText || "  (None)"}\n`;
+            })
+            .join("\n")
+        : "No Categories Found";
 
-        // Products Document
-        const productDoc = await adminDb
-            .collection("websites")
-            .doc(WEBSITE)
-            .collection("pages")
-            .doc("products")
-            .get();
-
-        const productData = productDoc.exists ? productDoc.data() : {};
-        const products = productData.products || [];
-
-        // Categories
-        const categorySnap = await adminDb
-            .collection("websites")
-            .doc(WEBSITE)
-            .collection("pages")
-            .doc("categoryproducts")
-            .collection("categories")
-            .get();
-
-        const categories = categorySnap.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
-
-        // ===========================
-        // Published Products
-        // ===========================
-
-        const publishedProducts = products.filter(
-            (item) => item.isPublished === true
-        );
-
-        // ===========================
-        // Categories
-        // ===========================
-
-        const categoryText =
-            categories.length > 0
-                ? categories
-                    .map((cat) => {
-
-                        const productList =
-                            (cat.products || [])
-                                .map((item) => `- ${item.title}`)
-                                .join("\n");
-
-                        return `
-
-                        ## ${cat.category}
-
-                        Category ID:
-                        ${cat.id}
-
-                        Total Products:
-                        ${cat.products?.length || 0}
-
-                        Products
-
-                        ${productList || "No Products"}
-
-                        `;
-
-                    })
-                    .join("\n")
-                : "No Categories Found";
-
-        // ===========================
-        // Products
-        // ===========================
-
-        const productText =
-            publishedProducts.length > 0
-                ? publishedProducts
-                    .map((product) => {
-
-                        return `
-
-# ${product.title}
-
-Category:
-${product.category || "N/A"}
-
-Brand:
-${product.brand || "N/A"}
-
-Model:
-${product.model || "N/A"}
-
-Description:
-${product.desc || "No description available"}
-
-Instrument:
-${product.instrument || "N/A"}
-
-Automation:
-${product.automation || "N/A"}
-
-Usage:
-${product.usage || "N/A"}
-
-Throughput:
-${product.throughput || "N/A"}
-
-Capacity:
-${product.capacity || "N/A"}
-
-Availability:
-${product.availability || "N/A"}
-
-Price:
-${product.price || "Contact for Price"}
-
-Product URL:
-
-${DOMAIN}/items/${product.slug || product.id}
-
-Images:
-
-${(product.images?.length
-                                ? product.images.map((img, index) => `${index + 1}. ${img}`).join("\n")
-                                : "No Images")
-                            }
-
-Video:
-
-${product.video || ""}
-
-PDF:
-
-${product.pdf || ""}
-       Keywords
-
-${[product.title, product.brand, product.category, product.model,
-                            product.instrument,
-                            product.automation,
-                            product.usage,
-                            ]
-                                .filter(Boolean)
-                                .join(", ")
-                            }
+    // Format Products Text
+    const productText =
+      publishedProducts.length > 0
+        ? publishedProducts
+            .slice(0, 100) // Keep llms.txt clean and token-friendly
+            .map((p) => {
+              return `### ${p.title}
+Category: ${p.category} | Subcategory: ${p.subCategory}
+Brand: ${p.brand || "Human Biomedicals"}
+Model: ${p.model || "N/A"}
+Price: ${p.price ? `₹${p.price}` : "Contact for quotation"}
+Description: ${p.desc || p.description || "Biomedical instrument supplied across India."}
+Instrument Type: ${p.instrument || "Diagnostic Laboratory Equipment"}
+Automation: ${p.automation || "N/A"}
+Usage: ${p.usage || "Clinical & Hospital Diagnostics"}
+URL: ${DOMAIN}/items/${p.slug}
 `;
-                    })
-                    .join("\n")
-                : "No Products Found";
+            })
+            .join("\n")
+        : "No Products Found";
 
+    // Format Districts Text
+    const districtText =
+      districts.length > 0
+        ? districts.map((d) => `- ${DOMAIN}/${d.id}`).join("\n")
+        : `- ${DOMAIN}/items`;
 
-        // ===========================
-        // Districts
-        // ===========================
+    const content = `# Human Biomedicals - Master Product Catalog & Services
+Website: ${DOMAIN}
+Last Updated: ${new Date().toISOString()}
 
-        const districtText =
-            districts.length > 0
-                ? districts
-                    .map(
-                        (item) =>
-                            `${DOMAIN}/${item.slug}`
-                    )
-                    .join("\n")
-                : "No Districts Found";
+## Catalog Summary
+- Total Published Products: ${publishedProducts.length}
+- Total Categories: ${categories.length}
+- Total Districts Served: ${districts.length}
 
-        // ===========================
-        // llms.txt
-        // ===========================
+## About Human Biomedicals
+Human Biomedicals is a premier supplier and distributor of clinical laboratory instruments, biochemistry analyzers, hematology systems, electrolyte analyzers, test strips, and pathology consumables across India.
 
-        const content = `
-## Statistics
+## Services Offered
+- Biomedical Equipment Sales & Distribution
+- Laboratory Analyzer Installation & Setup
+- Annual Maintenance Contracts (AMC / CMC)
+- Calibration & Diagnostic Technical Support
+- Pan-India Reagent & Consumables Delivery
 
-Products:
-${publishedProducts.length}
-
-Categories:
-${categories.length}
-
-Districts:
-${districts.length}
-# Human Biomedicals
-
-India's Trusted Biomedical Equipment Company
-
-Website
-
-${DOMAIN}
-
-Published Products
-
-${publishedProducts.length}
-
-Categories
-
-${categories.length}
-
-District Pages
-
-${districts.length}
-Company
-
-Human Biomedicals is one of India's trusted Biomedical Equipment suppliers.
-
-Services
-
-- Biomedical Equipment Supply
-- Laboratory Equipment
-- Diagnostic Equipment
-- Installation
-- AMC
-- Calibration
-- Repair
-- Technical Support
-- Pan India Delivery
-
-Search Keywords
-
-Biomedical Equipment
-
-Laboratory Equipment
-
-Diagnostic Equipment
-
-Hospital Equipment
-
-Medical Equipment
-
-ICU Equipment
-
-Operation Theatre Equipment
-
-Biochemistry Analyzer
-
-Electrolyte Analyzer
-
-CLIA Analyzer
-
-Immunoassay Analyzer
 ------------------------------------------------
-
-## Categories
-
+## Categories & Subcategories
 ${categoryText}
 
 ------------------------------------------------
-
-## Products
-
+## Featured Biomedical Products
 ${productText}
 
 ------------------------------------------------
-
-## District Pages
-
+## District Locations
 ${districtText}
 
 ------------------------------------------------
-
-Sitemap
-
-${DOMAIN}/sitemap.xml
-
-Robots
-
-${DOMAIN}/robots.txt
-
-Contact
-
-${DOMAIN}/contact
-Last Updated
-
-${new Date().toISOString()}
-
+## Links & Resources
+- Catalog: ${DOMAIN}/items
+- XML Sitemap: ${DOMAIN}/sitemap.xml
+- Robots Policy: ${DOMAIN}/robots.txt
+- Contact & Quotes: ${DOMAIN}/contact
 `;
-        return new NextResponse(content, {
-            headers: {
-                "Content-Type": "text/plain; charset=utf-8",
-                "Cache-Control": "public,max-age=3600",
-            },
-        });
-    } catch (e) {
-        return NextResponse.json(
-            {
-                success: false,
-                error: e.message,
-            },
-            {
-                status: 500,
-            }
-        );
-    }
 
+    return new NextResponse(content, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
+  } catch (e) {
+    console.error("llms.txt error:", e);
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+  }
 }

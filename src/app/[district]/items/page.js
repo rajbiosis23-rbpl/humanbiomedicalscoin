@@ -1,6 +1,9 @@
 import ProductsPage from "@/app/items/page";
 import { fetchDistrictsList } from "@/lib/data-fetcher";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // DYNAMIC DISTRICTS (On-demand rendering for fast builds)
 export async function generateStaticParams() {
   return [];

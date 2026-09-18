@@ -1,32 +1,29 @@
 import { db, doc, getDoc, getDocs, collection } from "./firebase.js";
+import {
+  fetchFullCatalog as fetchFullCatalogDb,
+  fetchFullCatalogData as fetchFullCatalogDataDb,
+  getCategoriesData as getCategoriesDataDb,
+  getProductBySlug as getProductBySlugDb,
+  getHomeData as getHomeDataDb,
+  getServicesData as getServicesDataDb,
+  getContactData as getContactDataDb,
+  getDistrictData as getDistrictDataDb,
+  makeSlug as makeSlugDb,
+  normalizeSlug as normalizeSlugDb,
+  normalizeProduct as normalizeProductDb,
+  isVisibleOnWebsite as isVisibleOnWebsiteDb,
+  WEBSITE_ID,
+} from "./db-server.js";
 
-// Simple in-memory cache for Firestore documents and catalog
-const docCache = {};
-let catalogPromise = null;
-
-export const makeSlug = (text = "") =>
-  String(text || "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-function safeDecode(str = "") {
-  try {
-    return decodeURIComponent(str);
-  } catch {
-    return str;
-  }
-}
-
-export const normalizeSlug = (s = "") =>
-  safeDecode(String(s || ""))
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/^-+|-+$/g, "");
+// Re-exports from db-server
+export const makeSlug = makeSlugDb;
+export const normalizeSlug = normalizeSlugDb;
+export const normalizeProduct = normalizeProductDb;
+export const isVisibleOnWebsite = isVisibleOnWebsiteDb;
+export const fetchFullCatalog = fetchFullCatalogDb;
+export const fetchFullCatalogData = fetchFullCatalogDataDb;
+export const getCategoriesData = getCategoriesDataDb;
+export const getProductBySlug = getProductBySlugDb;
 
 export function findProductBySlug(allProducts = [], slug = "") {
   if (!slug || !allProducts || !allProducts.length) return null;
@@ -42,6 +39,7 @@ export function findProductBySlug(allProducts = [], slug = "") {
   );
 }
 
+const docCache = {};
 
 /**
  * Fetch a single document and cache its promise/data.
@@ -64,7 +62,6 @@ export async function fetchDocCached(path) {
         return null;
       } catch (err) {
         console.error(`Error fetching doc at ${path}:`, err);
-        // Clear promise on error to allow retries
         delete docCache[path + "_promise"];
         throw err;
       }
@@ -74,149 +71,23 @@ export async function fetchDocCached(path) {
 }
 
 /**
- * Fetch and process the entire products catalog (categories, subcategories, legacy list).
- * Caches the result globally to eliminate repeat network reads during client-side navigation.
- */
-export async function fetchFullCatalog() {
-  if (catalogPromise) {
-    return catalogPromise;
-  }
-
-  catalogPromise = (async () => {
-    const startTime = performance.now();
-    try {
-      // 1. Fetch categories
-      const categorySnap = await getDocs(
-        collection(
-          db,
-          "websites",
-          "humanbiomedicalscoin",
-          "pages",
-          "categoryproducts",
-          "categories"
-        )
-      );
-
-      const allProducts = [];
-
-      // Fetch all subcategories in parallel to solve N+1 issue
-      await Promise.all(
-        categorySnap.docs.map(async (categoryDoc) => {
-          const data = categoryDoc.data();
-          const categoryName = data.category || categoryDoc.id;
-
-          try {
-            const subcategoriesCol = collection(
-              db,
-              "websites",
-              "humanbiomedicalscoin",
-              "pages",
-              "categoryproducts",
-              "categories",
-              categoryDoc.id,
-              "subcategories"
-            );
-
-            const subcategoriesSnap = await getDocs(subcategoriesCol);
-
-            subcategoriesSnap.forEach((subDoc) => {
-              const subData = subDoc.data();
-              const subCategoryName = subData.subCategory || subDoc.id;
-
-              const categoryProducts = (subData.products || [])
-                .filter((p) => p.isPublished !== false)
-                .map((item, index) => ({
-                  ...item,
-                  uid: `${categoryDoc.id}-${subDoc.id}-${index}`,
-                  category: categoryName,
-                  subCategory: subCategoryName,
-                  slug: item.slug || makeSlug(item.title),
-                }));
-
-              allProducts.push(...categoryProducts);
-            });
-          } catch (subErr) {
-            console.error(`Error fetching subcategories for category ${categoryDoc.id}:`, subErr);
-          }
-
-          // Fallback direct category products
-          if (data.products?.length) {
-            const directProducts = data.products
-              .filter((p) => p.isPublished !== false)
-              .map((item, index) => ({
-                ...item,
-                uid: `${categoryDoc.id}-direct-${index}`,
-                category: categoryName,
-                subCategory: item.subCategory || categoryName,
-                slug: item.slug || makeSlug(item.title),
-              }));
-            allProducts.push(...directProducts);
-          }
-        })
-      );
-
-      // Fetch old legacy products
-      try {
-        const oldSnap = await getDoc(
-          doc(
-            db,
-            "websites",
-            "humanbiomedicalscoin",
-            "pages",
-            "products"
-          )
-        );
-
-        if (oldSnap.exists()) {
-          const oldProducts = (oldSnap.data().products || [])
-            .filter((p) => p.isPublished !== false)
-            .map((item, index) => ({
-              ...item,
-              uid: `other-${index}`,
-              category: "Other Products",
-              subCategory: item.subCategory || "Other Products",
-              slug: item.slug || makeSlug(item.title),
-            }));
-
-          allProducts.push(...oldProducts);
-        }
-      } catch (oldErr) {
-        console.error("Error fetching legacy products:", oldErr);
-      }
-
-      const duration = performance.now() - startTime;
-      console.log(`[data-fetcher] Raw Firestore fetchFullCatalog completed in ${duration.toFixed(2)}ms`);
-
-      return allProducts;
-    } catch (err) {
-      console.error("Error fetching full catalog:", err);
-      // Clear cache promise on error to allow retries
-      catalogPromise = null;
-      throw err;
-    }
-  })();
-
-  return catalogPromise;
-}
-
-/**
  * Helpers for cached document retrieval across pages
  */
 export async function fetchHomeData() {
-  return fetchDocCached("websites/humanbiomedicalscoin/pages/home");
+  return getHomeDataDb();
 }
 
 export async function fetchContactData() {
-  return fetchDocCached("websites/humanbiomedicalscoin/pages/contact");
+  return getContactDataDb();
 }
 
 export async function fetchServicesData() {
-  return fetchDocCached("websites/humanbiomedicalscoin/pages/services");
+  return getServicesDataDb();
 }
 
 export async function fetchDistrictData(district) {
   if (!district) return null;
-  return fetchDocCached(`websites/humanbiomedicalscoin/districts/${district}`);
+  return getDistrictDataDb(district);
 }
 
 let districtsListPromise = null;
@@ -231,14 +102,14 @@ export async function fetchDistrictsList() {
         collection(
           db,
           "websites",
-          "humanbiomedicalscoin",
+          WEBSITE_ID,
           "districts"
         )
       );
       return snapshot.docs.map((doc) => doc.id);
     } catch (error) {
       console.error("Error fetching districts list from Firestore:", error);
-      districtsListPromise = null; // Allow retry on error
+      districtsListPromise = null;
       throw error;
     }
   })();

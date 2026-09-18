@@ -85,10 +85,10 @@ const SubCategoryItem = memo(function SubCategoryItem({
 
           <div className="subcategory-scroll">
 
-            {subList.map((item) => (
+            {subList.map((item, idx) => (
 
               <ProductLink
-                key={item.uid}
+                key={item.uid || `${item.id || item.slug || "link"}-${idx}`}
                 item={item}
                 category={category}
                 scrollToProduct={scrollToProduct}
@@ -224,26 +224,48 @@ export default function ProductsClient({ initialProducts = [], district = null, 
   const [pendingScroll, setPendingScroll] = useState(null);
   const [showTopButton, setShowTopButton] = useState(false);
 
+  // Sync when initialProducts prop updates (including when 0 products)
   useEffect(() => {
-    if (initialProducts && initialProducts.length > 0) {
+    if (Array.isArray(initialProducts)) {
       setProducts(initialProducts);
       setLoading(false);
-    } else if (products.length === 0) {
-      setLoading(true);
-      fetchFullCatalog()
-        .then((data) => {
-          if (data && data.length > 0) {
-            setProducts(data);
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching catalog on client:", err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
     }
   }, [initialProducts]);
+
+  // Live background sync from /api/catalog on mount, focus, and periodic interval
+  const syncLiveCatalog = useCallback(async () => {
+    try {
+      const res = await fetch("/api/catalog", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.products)) {
+          setProducts(data.products);
+          setLoading(false);
+        }
+      }
+    } catch (err) {
+      console.warn("[ProductsClient] Live sync background fetch failed:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Initial fetch only if not initialized
+    if (!initialProducts || initialProducts.length === 0) {
+      syncLiveCatalog();
+    }
+
+    // Register window focus listener for real-time reflection of SuperAdmin changes
+    const onFocus = () => syncLiveCatalog();
+    window.addEventListener("focus", onFocus);
+
+    // Periodic 3s sync for instant side-by-side admin updates
+    const interval = setInterval(syncLiveCatalog, 3000);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
+    };
+  }, [syncLiveCatalog, initialProducts]);
 
   // Read category / search URL parameters on mount
   useEffect(() => {
@@ -267,21 +289,10 @@ export default function ProductsClient({ initialProducts = [], district = null, 
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Combined single-pass product filtering, grouping, category count, and sorting for maximum performance
+  // Combined single-pass product filtering, grouping, category count, and sorting
   const { filteredProducts, sortedGroupedProducts, categoryCounts } = useMemo(() => {
     const query = productSearch.trim().toLowerCase();
-    const firstSlug = products[0]?.slug || "";
-    const cacheKey = `${products.length}-${firstSlug}-${query}`;
 
-    if (!globalThis._productsMemoCache) {
-      globalThis._productsMemoCache = new Map();
-    }
-
-    if (globalThis._productsMemoCache.has(cacheKey)) {
-      return globalThis._productsMemoCache.get(cacheKey);
-    }
-
-    const start = performance.now();
     const filtered = query
       ? products.filter((item) => {
         const title = (item.title || "").toLowerCase();
@@ -337,18 +348,12 @@ export default function ProductsClient({ initialProducts = [], district = null, 
       sortedObj[cat] = Object.fromEntries(subEntries);
     }
 
-    const end = performance.now();
-    console.log(`[ProductsClient] Grouping, filtering, and sorting completed in ${(end - start).toFixed(2)}ms`);
-
-    const result = {
+    return {
       filteredProducts: filtered,
       sortedGroupedProducts: sortedObj,
       categoryCounts: counts,
     };
-
-    globalThis._productsMemoCache.set(cacheKey, result);
-    return result;
-  }, [initialProducts, productSearch]);
+  }, [products, productSearch]);
 
   const getCategoryProductCount = useCallback((categoryName) => {
     return categoryCounts[categoryName] || 0;
@@ -748,17 +753,15 @@ export default function ProductsClient({ initialProducts = [], district = null, 
 
                               <div className="product-list">
 
-                                {list
-                                  .slice(0, 12)
-                                  .map((product) => (
+                                {list.map((product, idx) => (
 
-                                    <ProductCard
-                                      key={product.uid}
-                                      product={product}
-                                      district={district}
-                                    />
+                                  <ProductCard
+                                    key={product.uid || `${product.id || product.slug || "prod"}-${idx}`}
+                                    product={product}
+                                    district={district}
+                                  />
 
-                                  ))}
+                                ))}
 
                               </div>
 
