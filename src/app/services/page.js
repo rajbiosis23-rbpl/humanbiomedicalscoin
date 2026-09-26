@@ -5,13 +5,7 @@ import {
   useState
 } from "react";
 
-import Link from "next/link";
-
-import {
-  doc,
-  getDoc,
-  db,
-} from "@/lib/firebase";
+import { fetchServicesData } from "@/lib/data-fetcher";
 
 import "./services.css";
 
@@ -49,25 +43,11 @@ export default function ServicesPage() {
       async () => {
 
         try {
-
-          const snap =
-            await getDoc(
-              doc(
-                db,
-                "websites",
-                "humanbiomedicalscoin",
-                "pages",
-                "services"
-              )
-            );
-
-          if (snap.exists()) {
-
-            setServices(
-              snap.data()
-                ?.services || []
-            );
-
+          const data = await fetchServicesData();
+          if (Array.isArray(data)) {
+            setServices(data);
+          } else if (data?.services) {
+            setServices(data.services);
           }
 
         } catch (error) {

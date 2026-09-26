@@ -1,24 +1,18 @@
-import { fetchFullCatalog } from "@/lib/db-server";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { fetchFullCatalog, getDistrictsList } from "@/lib/db-server";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function sitemap() {
   const BASE_URL = "https://humanbiomedicals.co.in";
   let urls = [];
 
   try {
-    // 1. Fetch products from Master Catalog
+    // 1. Fetch products from Master Catalog (via SQLite Admin API)
     const products = await fetchFullCatalog();
 
     // 2. Fetch districts
-    let districts = [];
-    if (adminDb) {
-      const districtSnap = await adminDb
-        .collection("websites")
-        .doc("humanbiomedicalscoin")
-        .collection("districts")
-        .get();
-      districts = districtSnap.docs.map((doc) => doc.id);
-    }
+    const districts = await getDistrictsList();
 
     // 3. Static Root Pages
     urls.push(

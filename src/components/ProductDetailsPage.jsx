@@ -1,15 +1,8 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { usePathname } from "next/navigation";
-import {
-    doc,
-    getDoc,
-    getDocs,
-    addDoc,
-    collection,
-    serverTimestamp,
-    db,
-} from "@/lib/firebase";
+import { fetchFullCatalog, findProductBySlug } from "@/lib/data-fetcher";
+import { FaShareAlt } from "react-icons/fa";
 
 import toast, {
     Toaster,
@@ -46,80 +39,19 @@ export default function ProductDetailsPage({
             async () => {
 
                 try {
+                    const allProducts = await fetchFullCatalog();
+                    const found = findProductBySlug(allProducts, slug);
 
-                    const snap =
-                        await getDoc(
-                            doc(
-                                db,
-                                "websites",
-                                "humanbiomedicalscoin",
-                                "pages",
-                                "products"
-                            )
+                    setProduct(found || null);
+
+                    if (found) {
+                        setSelectedImage(
+                            found.images?.[0] ||
+                            found.image ||
+                            ""
                         );
-
-                    if (snap.exists()) {
-
-                        const products =
-                            snap.data()?.products || [];
-
-                        let found = products.find(
-                            (item) =>
-                                item.title
-                                    ?.toLowerCase()
-                                    .replace(/[^a-z0-9\s-]/g, "")
-                                    .replace(/\s+/g, "-") === slug
-                        );
-
-                        // CATEGORY PRODUCTS SEARCH
-                        if (!found) {
-
-                            const categorySnap = await getDocs(
-                                collection(
-                                    db,
-                                    "websites",
-                                    "humanbiomedicalscoin",
-                                    "pages",
-                                    "categoryproducts",
-                                    "categories"
-                                )
-                            );
-
-                            categorySnap.forEach((categoryDoc) => {
-
-                                const categoryProducts =
-                                    categoryDoc.data()?.products || [];
-
-                                const match =
-                                    categoryProducts.find(
-                                        (item) =>
-                                            item.title
-                                                ?.toLowerCase()
-                                                .replace(/[^a-z0-9\s-]/g, "")
-                                                .replace(/\s+/g, "-") === slug
-                                    );
-
-                                if (match) {
-                                    found = match;
-                                }
-
-                            });
-                        }
-
-                        setProduct(found);
-
-                        if (found) {
-
-                            setSelectedImage(
-                                found.images?.[0] ||
-                                found.image
-                            );
-
-                            setSelectedMedia("image");
-
-                        }
+                        setSelectedMedia("image");
                     }
-
                 } catch (error) {
 
                     console.log(error);
@@ -205,25 +137,27 @@ export default function ProductDetailsPage({
 
                 setLoading(true);
 
-                await addDoc(
-                    collection(
-                        db,
-                        "websitesQueries",
-                        "humanbiomedicalscoin",
-                        "productQueries"
-                    ),
-                    {
-                        productName:
-                            product.title,
+                const res = await fetch("/api/product-query", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        productName: product?.title || "",
+                        productSlug: product?.slug || slug || "",
+                        brand: product?.brand || "",
+                        model: product?.model || "",
+                        name: name.trim(),
+                        email: email.trim(),
+                        phone: phone.trim(),
+                        city: city || "India",
+                    }),
+                });
 
-                        name,
-                        email,
-                        phone,
-
-                        createdAt:
-                            serverTimestamp(),
-                    }
-                );
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || "Failed To Send Enquiry");
+                }
 
                 toast.success(
                     "Enquiry Sent Successfully"
@@ -238,7 +172,7 @@ export default function ProductDetailsPage({
                 console.log(error);
 
                 toast.error(
-                    "Failed To Send Enquiry"
+                    error.message || "Failed To Send Enquiry"
                 );
 
             } finally {

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { doc, getDoc, db } from "@/lib/firebase";
+import { fetchHomeData } from "@/lib/data-fetcher";
 import imageone from "@/components/home/img-1.png";
 
 import "./home.css";
@@ -15,36 +15,29 @@ export default function Hero({ city = "" }) {
   useEffect(() => {
     const fetchHero = async () => {
       try {
-        const snap = await getDoc(
-          doc(
-            db,
-            "websites",
-            "humanbiomedicalscoin",
-            "pages",
-            "home"
-          )
-        );
-
-        if (snap.exists()) {
-          setHeroData(snap.data());
+        const data = await fetchHomeData();
+        if (data) {
+          setHeroData(data);
         }
       } catch (error) {
-        console.log(error);
+        console.log("Error loading hero data:", error);
       }
     };
 
     fetchHero();
   }, []);
 
-  const data = {
-    badge: heroData?.badge || "ISO 9001:2015 Certified Biomedical Supplier",
-    title: heroData?.title || "Advanced Biomedical & Laboratory Equipment",
-    description: heroData?.description || "Human Biomedicals provides top-tier pathology analyzers, biochemistry systems, hematology instruments, and 24/7 technical support for hospitals & diagnostic centers across India.",
-    button1Text: heroData?.button1Text || "Get Quote",
-    button1Link: heroData?.button1Link || "/contact",
-    button2Text: heroData?.button2Text || "View Products",
-    button2Link: heroData?.button2Link || "/items",
-  };
+  const badge = heroData?.badge || "";
+  const title = heroData?.title || "";
+  const description = heroData?.description || "";
+  const button1Text = heroData?.button1Text || "";
+  const button2Text = heroData?.button2Text || "";
+
+  // Static links as specified
+  const button1Link = city ? `/${city.toLowerCase()}/contact/` : "/contact";
+  const button2Link = city ? `/${city.toLowerCase()}/items/` : "/items";
+
+  const heroImageUrl = heroData?.imageUrl || heroData?.image || "";
 
   return (
     <section className="hero-section">
@@ -66,41 +59,48 @@ export default function Hero({ city = "" }) {
             }}
           >
             <span className="section-subtitle">
-              Huamn Biomedical IN {(city || "India").toUpperCase()}
+              Human Biomedical IN {(city || "India").toUpperCase()}
             </span>
-            {data.badge && (
+
+            {badge && (
               <span className="hero-badge">
-                {data.badge}
+                {badge}
               </span>
             )}
 
-            {data.title && (
+            {title && (
               <h1 className="hero-title">
-                {data.title}
+                {title}
               </h1>
             )}
 
-            {data.description && (
+            {description && (
               <p className="hero-description">
-                {data.description}
+                {description}
               </p>
             )}
 
-            <div className="hero-btns">
-              <Link
-                href={city ? `/${city.toLowerCase()}/contact/` : "/contact"}
-                className="hero-primary-btn"
-              >
-                Get Quote
-              </Link>
+            {(button1Text || button2Text) && (
+              <div className="hero-btns">
+                {button1Text && (
+                  <Link
+                    href={button1Link}
+                    className="hero-primary-btn"
+                  >
+                    {button1Text}
+                  </Link>
+                )}
 
-              <Link
-                href={city ? `/${city.toLowerCase()}/items/` : "/items"}
-                className="hero-secondary-btn"
-              >
-                View Products
-              </Link>
-            </div>
+                {button2Text && (
+                  <Link
+                    href={button2Link}
+                    className="hero-secondary-btn"
+                  >
+                    {button2Text}
+                  </Link>
+                )}
+              </div>
+            )}
           </motion.div>
 
           {/* RIGHT IMAGE */}
@@ -118,9 +118,9 @@ export default function Hero({ city = "" }) {
             }}
           >
             <div className="hero-image-card">
-              {heroData?.imageUrl ? (
+              {heroImageUrl ? (
                 <img
-                  src={heroData.imageUrl}
+                  src={heroImageUrl}
                   alt="Hero Image"
                   className="hero-image"
                 />

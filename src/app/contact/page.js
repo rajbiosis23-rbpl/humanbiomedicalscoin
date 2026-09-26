@@ -5,17 +5,7 @@ import {
   useState,
 } from "react";
 
-import {
-  doc,
-  getDoc,
-  getDocs,
-  collection,
-  query,
-  where,
-  addDoc,
-  serverTimestamp,
-  db,
-} from "@/lib/firebase";
+import { fetchContactData, fetchDistrictData } from "@/lib/data-fetcher";
 
 import toast, {
   Toaster,
@@ -70,25 +60,11 @@ export default function ContactPage({
       async () => {
 
         try {
-
-          const snap =
-            await getDoc(
-              doc(
-                db,
-                "websites",
-                "humanbiomedicalscoin",
-                "pages",
-                "contact"
-              )
-            );
-
-          if (snap.exists()) {
-
-            setContactInfo(
-              snap.data()
-                ?.contactInfo || []
-            );
-
+          const data = await fetchContactData();
+          if (Array.isArray(data)) {
+            setContactInfo(data);
+          } else if (data?.contactInfo) {
+            setContactInfo(data.contactInfo);
           }
 
         } catch (error) {
@@ -112,33 +88,9 @@ export default function ContactPage({
           return;
 
         try {
-
-          const q =
-            query(
-              collection(
-                db,
-                "websites",
-                "humanbiomedicalscoin",
-                "districts"
-              ),
-              where(
-                "slug",
-                "==",
-                city.toLowerCase()
-              )
-            );
-
-          const snapshot =
-            await getDocs(q);
-
-          if (
-            !snapshot.empty
-          ) {
-
-            setDistrictData(
-              snapshot.docs[0].data()
-            );
-
+          const data = await fetchDistrictData(city);
+          if (data) {
+            setDistrictData(data);
           }
 
         } catch (error) {
@@ -158,24 +110,27 @@ export default function ContactPage({
       districtData &&
       city.toLowerCase() !==
       "jaipur"
-      ? `${districtData.district}, ${districtData.state}, India`
+      ? `${districtData.district || districtData.name || ""}, ${districtData.state || ""}, India`
       : null;
 
-  // ORIGINAL FIREBASE ADDRESS
-  const firebaseAddress =
+  // ADMIN ADDRESS
+  const adminAddress =
     contactInfo.find(
       (item) =>
         item.label
           ?.toLowerCase()
           ?.trim() ===
-        "office address"
+        "office address" ||
+        item.label
+          ?.toLowerCase()
+          ?.includes("address")
     )?.value;
 
   // FINAL ADDRESS
   const finalAddress =
     dynamicLocation ||
-    firebaseAddress ||
-    "Jaipur, Rajasthan, India";
+    adminAddress ||
+    "";
 
   // SEND MESSAGE
   const sendMessage =
@@ -225,27 +180,25 @@ export default function ContactPage({
 
         setLoading(true);
 
-        await addDoc(
-          collection(
-            db,
-            "websitesQueries",
-            "humanbiomedicalscoin",
-            "contactQueries"
-          ),
-          {
+        const res = await fetch("/api/contact-query", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            city: formattedCity,
+            name: name.trim(),
+            email: email.trim(),
+            phone: phone.trim(),
+            message: message.trim(),
+          }),
+        });
 
-            city:
-              formattedCity,
+        const result = await res.json();
 
-            name,
-            email,
-            phone,
-            message,
-
-            createdAt:
-              serverTimestamp(),
-          }
-        );
+        if (!res.ok || !result.success) {
+          throw new Error(result.error || "Failed To Send Message");
+        }
 
         toast.success(
           "Message Sent Successfully"
@@ -261,7 +214,7 @@ export default function ContactPage({
         console.log(error);
 
         toast.error(
-          "Failed To Send Message"
+          error.message || "Failed To Send Message"
         );
 
       } finally {
@@ -383,6 +336,7 @@ export default function ContactPage({
                 <button
                   type="submit"
                   className="contact-btn"
+                  disabled={loading}
                 >
 
                   {loading
@@ -424,12 +378,6 @@ export default function ContactPage({
           <div className="contact-info-grid">
 
             {contactInfo
-              .filter(
-                (item) =>
-                  !item.label
-                    ?.toLowerCase()
-                    ?.includes("email")
-              )
               .map((item, index) => {
 
                 let value =
@@ -438,21 +386,22 @@ export default function ContactPage({
                 const label =
                   item.label
                     ?.toLowerCase()
-                    ?.trim();
+                    ?.trim() || "";
 
-                // ONLY ADDRESS DYNAMIC
+                // ONLY ADDRESS DYNAMIC IF CITY GIVEN
                 if (
-                  label ===
-                  "office address"
+                  label === "office address" ||
+                  label.includes("address")
                 ) {
-
                   value =
-                    finalAddress;
-                } else if (
-                  label?.includes("phone")
-                ) {
-                  value = "+91 9251598228";
+                    finalAddress || value;
                 }
+
+                const isPhone = label.includes("phone") || label.includes("mobile") || label.includes("call") || label.includes("contact");
+                const isEmail = label.includes("email") || label.includes("mail");
+
+                // Split multiple values if comma/slash separated
+                const parts = typeof value === "string" ? value.split(/[,/|\n]/).map(v => v.trim()).filter(Boolean) : [value];
 
                 return (
 
@@ -465,9 +414,33 @@ export default function ContactPage({
                       {item.label}
                     </h3>
 
-                    <p>
-                      {value}
-                    </p>
+                    <div className="contact-card-values">
+                      {parts.map((part, pIdx) => {
+                        if (isPhone) {
+                          return (
+                            <p key={pIdx}>
+                              <a href={`tel:${part.replace(/\s+/g, "")}`}>
+                                {part}
+                              </a>
+                            </p>
+                          );
+                        }
+                        if (isEmail) {
+                          return (
+                            <p key={pIdx}>
+                              <a href={`mailto:${part}`}>
+                                {part}
+                              </a>
+                            </p>
+                          );
+                        }
+                        return (
+                          <p key={pIdx}>
+                            {part}
+                          </p>
+                        );
+                      })}
+                    </div>
 
                   </div>
                 );

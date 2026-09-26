@@ -7,6 +7,7 @@ import {
   getServicesData as getServicesDataDb,
   getContactData as getContactDataDb,
   getDistrictData as getDistrictDataDb,
+  getDistrictsList as getDistrictsListDb,
 } from "./db-server.js";
 
 export const fetchFullCatalog = fetchFullCatalogDb;
@@ -17,3 +18,4 @@ export const getHomeData = getHomeDataDb;
 export const getServicesData = getServicesDataDb;
 export const getContactData = getContactDataDb;
 export const getDistrictData = getDistrictDataDb;
+export const getDistrictsList = getDistrictsListDb;

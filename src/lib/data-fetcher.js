@@ -1,29 +1,29 @@
-import { db, doc, getDoc, getDocs, collection } from "./firebase.js";
 import {
-  fetchFullCatalog as fetchFullCatalogDb,
-  fetchFullCatalogData as fetchFullCatalogDataDb,
-  getCategoriesData as getCategoriesDataDb,
-  getProductBySlug as getProductBySlugDb,
-  getHomeData as getHomeDataDb,
-  getServicesData as getServicesDataDb,
-  getContactData as getContactDataDb,
-  getDistrictData as getDistrictDataDb,
-  makeSlug as makeSlugDb,
-  normalizeSlug as normalizeSlugDb,
-  normalizeProduct as normalizeProductDb,
-  isVisibleOnWebsite as isVisibleOnWebsiteDb,
   WEBSITE_ID,
-} from "./db-server.js";
+  PRIMARY_COMPANY,
+  ALL_COMPANIES,
+  normalizeDomainId,
+  detectCompanyId,
+  makeSlug,
+  normalizeSlug,
+  isItemVisibleOnWebsite,
+  isVisibleOnWebsite,
+  normalizeProduct,
+} from "./catalog-utils.js";
 
-// Re-exports from db-server
-export const makeSlug = makeSlugDb;
-export const normalizeSlug = normalizeSlugDb;
-export const normalizeProduct = normalizeProductDb;
-export const isVisibleOnWebsite = isVisibleOnWebsiteDb;
-export const fetchFullCatalog = fetchFullCatalogDb;
-export const fetchFullCatalogData = fetchFullCatalogDataDb;
-export const getCategoriesData = getCategoriesDataDb;
-export const getProductBySlug = getProductBySlugDb;
+// Re-exports from client-safe catalog utils
+export {
+  WEBSITE_ID,
+  PRIMARY_COMPANY,
+  ALL_COMPANIES,
+  normalizeDomainId,
+  detectCompanyId,
+  makeSlug,
+  normalizeSlug,
+  isItemVisibleOnWebsite,
+  isVisibleOnWebsite,
+  normalizeProduct,
+};
 
 export function findProductBySlug(allProducts = [], slug = "") {
   if (!slug || !allProducts || !allProducts.length) return null;
@@ -39,79 +39,135 @@ export function findProductBySlug(allProducts = [], slug = "") {
   );
 }
 
-const docCache = {};
-
 /**
- * Fetch a single document and cache its promise/data.
+ * Pure Client-safe helper to fetch live catalog from /api/catalog
  */
-export async function fetchDocCached(path) {
-  if (docCache[path]) {
-    return docCache[path];
+export async function fetchFullCatalog() {
+  try {
+    const res = await fetch("/api/catalog", { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      return json.products || json.categoryProducts || [];
+    }
+  } catch (e) {
+    console.warn("[data-fetcher] fetchFullCatalog error:", e);
   }
-  if (!docCache[path + "_promise"]) {
-    docCache[path + "_promise"] = (async () => {
-      try {
-        const parts = path.split("/");
-        const docRef = doc(db, ...parts);
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          docCache[path] = data;
-          return data;
-        }
-        return null;
-      } catch (err) {
-        console.error(`Error fetching doc at ${path}:`, err);
-        delete docCache[path + "_promise"];
-        throw err;
-      }
-    })();
-  }
-  return docCache[path + "_promise"];
+  return [];
 }
 
 /**
- * Helpers for cached document retrieval across pages
+ * Pure Client-safe helper to fetch full catalog data with categoryList
+ */
+export async function fetchFullCatalogData() {
+  try {
+    const res = await fetch("/api/catalog", { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      return {
+        categoryProducts: json.products || json.categoryProducts || [],
+        categoryList: json.categoryList || [],
+        count: json.count || 0,
+      };
+    }
+  } catch (e) {
+    console.warn("[data-fetcher] fetchFullCatalogData error:", e);
+  }
+  return { categoryProducts: [], categoryList: [], count: 0 };
+}
+
+/**
+ * Pure Client-safe helper for categories data
+ */
+export async function getCategoriesData() {
+  return await fetchFullCatalogData();
+}
+
+/**
+ * Pure Client-safe helper to fetch single product by slug
+ */
+export async function getProductBySlug(slug) {
+  if (!slug) return null;
+  const products = await fetchFullCatalog();
+  return findProductBySlug(products, slug);
+}
+
+/**
+ * Pure Client-safe helper to fetch home page data
  */
 export async function fetchHomeData() {
-  return getHomeDataDb();
+  try {
+    const res = await fetch("/api/site-data?type=home", { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      return json.data || null;
+    }
+  } catch (e) {
+    console.warn("[data-fetcher] fetchHomeData error:", e);
+  }
+  return null;
 }
 
+/**
+ * Pure Client-safe helper to fetch contact page info
+ */
 export async function fetchContactData() {
-  return getContactDataDb();
+  try {
+    const res = await fetch("/api/site-data?type=contact", { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      return json.contactInfo || json.data?.contactInfo || json.data || [];
+    }
+  } catch (e) {
+    console.warn("[data-fetcher] fetchContactData error:", e);
+  }
+  return [];
 }
 
+/**
+ * Pure Client-safe helper to fetch services page data
+ */
 export async function fetchServicesData() {
-  return getServicesDataDb();
+  try {
+    const res = await fetch("/api/site-data?type=services", { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      return json.services || json.data?.services || json.data || [];
+    }
+  } catch (e) {
+    console.warn("[data-fetcher] fetchServicesData error:", e);
+  }
+  return [];
 }
 
+/**
+ * Pure Client-safe helper to fetch district data
+ */
 export async function fetchDistrictData(district) {
   if (!district) return null;
-  return getDistrictDataDb(district);
+  try {
+    const res = await fetch(`/api/site-data?type=districts&district=${encodeURIComponent(district)}`, { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      return json.data || null;
+    }
+  } catch (e) {
+    console.warn("[data-fetcher] fetchDistrictData error:", e);
+  }
+  return null;
 }
 
-let districtsListPromise = null;
-
+/**
+ * Pure Client-safe helper to fetch all districts
+ */
 export async function fetchDistrictsList() {
-  if (districtsListPromise) {
-    return districtsListPromise;
-  }
-  districtsListPromise = (async () => {
-    try {
-      const snapshot = await getDocs(
-        collection(
-          db,
-          "websites",
-          WEBSITE_ID,
-          "districts"
-        )
-      );
-      return snapshot.docs.map((doc) => doc.id);
-    } catch (error) {
-      console.error("Error fetching districts list from Firestore:", error);
-      districtsListPromise = null;
-      throw error;
+  try {
+    const res = await fetch("/api/site-data?type=districts", { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      return json.districts || json.data || [];
     }
-  })();
-  return districtsListPromise;
+  } catch (e) {
+    console.warn("[data-fetcher] fetchDistrictsList error:", e);
+  }
+  return [];
 }

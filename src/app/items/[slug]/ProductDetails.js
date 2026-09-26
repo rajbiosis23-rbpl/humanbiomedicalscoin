@@ -14,12 +14,6 @@ import {
     FaLink,
 } from "react-icons/fa";
 
-import {
-    addDoc,
-    collection,
-    db,
-    serverTimestamp,
-} from "@/lib/firebase";
 import { fetchFullCatalog, findProductBySlug } from "@/lib/data-fetcher";
 
 export default function ProductDetails({ slug, product: initialProduct, district: initialDistrict }) {
@@ -131,14 +125,12 @@ export default function ProductDetails({ slug, product: initialProduct, district
         try {
             setSubmitting(true);
 
-            await addDoc(
-                collection(
-                    db,
-                    "websitesQueries",
-                    "humanbiomedicalscoin",
-                    "productQueries"
-                ),
-                {
+            const res = await fetch("/api/product-query", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
                     name: form.name.trim(),
                     email: form.email.trim(),
                     phone: form.phone.trim(),
@@ -146,9 +138,14 @@ export default function ProductDetails({ slug, product: initialProduct, district
                     productSlug: product?.slug || slug || "",
                     brand: product?.brand || "",
                     model: product?.model || "",
-                    createdAt: serverTimestamp(),
-                }
-            );
+                    city: cityName || "",
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || "Failed to submit enquiry");
+            }
 
             toast.success("Your enquiry has been submitted successfully.");
 
@@ -159,7 +156,7 @@ export default function ProductDetails({ slug, product: initialProduct, district
             });
         } catch (error) {
             console.error("Error submitting query:", error);
-            toast.error("Something went wrong");
+            toast.error(error.message || "Something went wrong");
         } finally {
             setSubmitting(false);
         }
@@ -212,6 +209,7 @@ export default function ProductDetails({ slug, product: initialProduct, district
         toast.success("Link Copied");
         setShowShare(false);
     };
+    const handleCopyLink = handleCopy;
 
     const handleWhatsapp = () => {
         const shareText = `🔬 ${product?.title}\n\n${product?.desc || ""}\n\n🌐 ${window.location.href}`;

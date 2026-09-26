@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  useMemo,
 } from "react";
 
 import Link from "next/link";
@@ -11,15 +12,7 @@ import {
   usePathname,
 } from "next/navigation";
 
-import {
-  doc,
-  getDoc,
-  getDocs,
-  collection,
-  query,
-  where,
-  db,
-} from "@/lib/firebase";
+import { fetchContactData, fetchDistrictData } from "@/lib/data-fetcher";
 
 import {
   FaLinkedin,
@@ -73,25 +66,11 @@ export default function Footer() {
       async () => {
 
         try {
-
-          const snap =
-            await getDoc(
-              doc(
-                db,
-                "websites",
-                "humanbiomedicalscoin",
-                "pages",
-                "contact"
-              )
-            );
-
-          if (snap.exists()) {
-
-            setContactInfo(
-              snap.data()
-                ?.contactInfo || []
-            );
-
+          const data = await fetchContactData();
+          if (Array.isArray(data)) {
+            setContactInfo(data);
+          } else if (data?.contactInfo) {
+            setContactInfo(data.contactInfo);
           }
 
         } catch (error) {
@@ -115,33 +94,9 @@ export default function Footer() {
           return;
 
         try {
-
-          const q =
-            query(
-              collection(
-                db,
-                "websites",
-                "humanbiomedicalscoin",
-                "districts"
-              ),
-              where(
-                "slug",
-                "==",
-                district
-              )
-            );
-
-          const snapshot =
-            await getDocs(q);
-
-          if (
-            !snapshot.empty
-          ) {
-
-            setDistrictData(
-              snapshot.docs[0].data()
-            );
-
+          const data = await fetchDistrictData(district);
+          if (data) {
+            setDistrictData(data);
           }
 
         } catch (error) {
@@ -159,20 +114,55 @@ export default function Footer() {
     district &&
       districtData &&
       district.toLowerCase() !== "jaipur"
-      ? `${districtData.district}, ${districtData.state}, India`
+      ? `${districtData.district || districtData.name || ""}, ${districtData.state || ""}, India`
       : null;
 
-  // FIND EMAIL
-  const email =
-    contactInfo.find(
-      (item) =>
-        item.label
-          ?.toLowerCase()
-          ?.includes("email")
-    )?.value;
+  // Extract all dynamic phone numbers from admin contactInfo (supports multiple)
+  const phoneNumbers = useMemo(() => {
+    const list = [];
+    contactInfo.forEach((item) => {
+      const label = (item.label || "").toLowerCase();
+      if (
+        label.includes("phone") ||
+        label.includes("mobile") ||
+        label.includes("contact") ||
+        label.includes("call") ||
+        label.includes("tel") ||
+        label.includes("whatsapp")
+      ) {
+        if (item.value) {
+          String(item.value)
+            .split(/[,/|\n]/)
+            .map((p) => p.trim())
+            .filter(Boolean)
+            .forEach((p) => {
+              if (!list.includes(p)) list.push(p);
+            });
+        }
+      }
+    });
+    return list;
+  }, [contactInfo]);
 
-  // FIND PHONE
-  const phone = "+91 9251598228";
+  // Extract all dynamic emails from admin contactInfo (supports multiple)
+  const emails = useMemo(() => {
+    const list = [];
+    contactInfo.forEach((item) => {
+      const label = (item.label || "").toLowerCase();
+      if (label.includes("email") || label.includes("mail")) {
+        if (item.value) {
+          String(item.value)
+            .split(/[,/|\n]/)
+            .map((e) => e.trim())
+            .filter(Boolean)
+            .forEach((e) => {
+              if (!list.includes(e)) list.push(e);
+            });
+        }
+      }
+    });
+    return list;
+  }, [contactInfo]);
 
   // FIND ADDRESS
   const address =
@@ -180,8 +170,22 @@ export default function Footer() {
       (item) =>
         item.label
           ?.toLowerCase()
-          ?.includes("office")
+          ?.includes("office") ||
+        item.label
+          ?.toLowerCase()
+          ?.includes("address")
     )?.value;
+
+  const displayAddress = dynamicLocation || address || "";
+
+  // Dynamic WhatsApp number from admin phone
+  const whatsappDigits = useMemo(() => {
+    const waItem = contactInfo.find((item) =>
+      (item.label || "").toLowerCase().includes("whatsapp")
+    );
+    const sourcePhone = waItem?.value || phoneNumbers[0] || "";
+    return sourcePhone.replace(/\D/g, "");
+  }, [contactInfo, phoneNumbers]);
 
   return (
 
@@ -239,14 +243,16 @@ export default function Footer() {
                 <FaInstagram />
               </a>
 
-              <a
-                href="https://wa.me/919251598228"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="WhatsApp"
-              >
-                <FaWhatsapp />
-              </a>
+              {whatsappDigits ? (
+                <a
+                  href={`https://wa.me/${whatsappDigits}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp"
+                >
+                  <FaWhatsapp />
+                </a>
+              ) : null}
 
             </div>
 
@@ -325,16 +331,23 @@ export default function Footer() {
               Contact Info
             </h3>
 
-            <p>
-              📍 {
-                dynamicLocation ||
-                address
-              }
-            </p>
+            {displayAddress && (
+              <p>
+                📍 {displayAddress}
+              </p>
+            )}
 
-            <p>
-              📞 {phone || "+91 9251598228"}
-            </p>
+            {phoneNumbers.map((phone, idx) => (
+              <p key={`phone-${idx}`}>
+                📞 <a href={`tel:${phone.replace(/\s+/g, "")}`}>{phone}</a>
+              </p>
+            ))}
+
+            {emails.map((email, idx) => (
+              <p key={`email-${idx}`}>
+                ✉️ <a href={`mailto:${email}`}>{email}</a>
+              </p>
+            ))}
 
           </div>
 

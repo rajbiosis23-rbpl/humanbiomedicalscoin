@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { fetchFullCatalogData } from "@/lib/db-server";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { fetchFullCatalogData, getDistrictsList } from "@/lib/db-server";
 
 const DOMAIN = "https://humanbiomedicals.co.in";
-const WEBSITE = "humanbiomedicalscoin";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -15,18 +13,7 @@ export async function GET() {
     const products = catalogData.categoryProducts || [];
 
     // Districts
-    let districts = [];
-    if (adminDb) {
-      const districtSnap = await adminDb
-        .collection("websites")
-        .doc(WEBSITE)
-        .collection("districts")
-        .get();
-      districts = districtSnap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-    }
+    const districtSlugs = await getDistrictsList();
 
     const publishedProducts = products.filter((p) => p.isPublished !== false);
 
@@ -68,8 +55,8 @@ URL: ${DOMAIN}/items/${p.slug}
 
     // Format Districts Text
     const districtText =
-      districts.length > 0
-        ? districts.map((d) => `- ${DOMAIN}/${d.id}`).join("\n")
+      districtSlugs.length > 0
+        ? districtSlugs.map((slug) => `- ${DOMAIN}/${slug}`).join("\n")
         : `- ${DOMAIN}/items`;
 
     const content = `# Human Biomedicals - Master Product Catalog & Services
@@ -79,7 +66,7 @@ Last Updated: ${new Date().toISOString()}
 ## Catalog Summary
 - Total Published Products: ${publishedProducts.length}
 - Total Categories: ${categories.length}
-- Total Districts Served: ${districts.length}
+- Total Districts Served: ${districtSlugs.length}
 
 ## About Human Biomedicals
 Human Biomedicals is a premier supplier and distributor of clinical laboratory instruments, biochemistry analyzers, hematology systems, electrolyte analyzers, test strips, and pathology consumables across India.

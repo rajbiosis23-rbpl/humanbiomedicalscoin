@@ -111,8 +111,30 @@ const getImageDimensions = (dataUrl) => {
     });
 };
 
-export async function generateProductPDF(product, activeImageUrl = "", city = "India") {
+export async function generateProductPDF(product, activeImageUrl = "", city = "India", dynamicContact = null) {
     if (!product) return;
+
+    // Fetch dynamic contact info if not passed
+    let dynamicPhones = [];
+    try {
+        const { fetchContactData } = await import("@/lib/data-fetcher");
+        const cData = dynamicContact || (await fetchContactData());
+        const list = Array.isArray(cData) ? cData : cData?.contactInfo || [];
+        list.forEach((item) => {
+            const label = (item.label || "").toLowerCase();
+            if (label.includes("phone") || label.includes("mobile") || label.includes("contact") || label.includes("call")) {
+                if (item.value) {
+                    String(item.value)
+                        .split(/[,/|\n]/)
+                        .map((p) => p.trim())
+                        .filter(Boolean)
+                        .forEach((p) => {
+                            if (!dynamicPhones.includes(p)) dynamicPhones.push(p);
+                        });
+                }
+            }
+        });
+    } catch {}
 
     const doc = new jsPDF("p", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
@@ -239,8 +261,11 @@ export async function generateProductPDF(product, activeImageUrl = "", city = "I
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.text("Phone: +91 9251598228", pageWidth - 14, 14, { align: "right" });
-    doc.text("Web: www.humanbiomedicals.co.in", pageWidth - 14, 20, { align: "right" });
+    const displayPhone = dynamicPhones.length > 0 ? dynamicPhones.join(" / ") : "";
+    if (displayPhone) {
+        doc.text(`Phone: ${displayPhone}`, pageWidth - 14, 14, { align: "right" });
+    }
+    doc.text("Web: www.humanbiomedicals.co.in", pageWidth - 14, displayPhone ? 20 : 16, { align: "right" });
 
     let currentY = 44;
 
