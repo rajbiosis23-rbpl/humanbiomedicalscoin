@@ -105,11 +105,73 @@ export const metadata = {
     "Medical Equipment",
 };
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "MedicalBusiness",
+  name: "Human Biomedicals",
+  url: "https://humanbiomedicals.co.in",
+  logo: "https://humanbiomedicals.co.in/images/logo.png",
+  image: "https://humanbiomedicals.co.in/images/logo.png",
+  description:
+    "Human Biomedicals is a trusted supplier of biomedical equipment, clinical laboratory instruments, diagnostic systems, pathology analyzers, and healthcare solutions across India.",
+  telephone: "+91-9828000000",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Medical Equipment Zone",
+    addressLocality: "Jaipur",
+    addressRegion: "Rajasthan",
+    postalCode: "302001",
+    addressCountry: "IN",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: "26.9124",
+    longitude: "75.7873",
+  },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      opens: "09:00",
+      closes: "19:00",
+    },
+  ],
+  priceRange: "₹₹₹",
+  currenciesAccepted: "INR",
+  paymentAccepted: "Bank Transfer, Credit Card, Cheque, Online",
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Human Biomedicals",
+  url: "https://humanbiomedicals.co.in",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: "https://humanbiomedicals.co.in/items?search={search_term_string}",
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({
   children,
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteSchema),
+          }}
+        />
+      </head>
 
       <body className="min-h-screen bg-[#fff8f2] text-[#1b1b1b]">
 

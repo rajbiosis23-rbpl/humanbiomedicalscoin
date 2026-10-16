@@ -8,7 +8,7 @@ export default async function sitemap() {
   let urls = [];
 
   try {
-    // 1. Fetch products from Master Catalog (via SQLite Admin API)
+    // 1. Fetch products from Master Catalog (SuperAdmin API & MongoDB)
     const products = await fetchFullCatalog();
 
     // 2. Fetch districts

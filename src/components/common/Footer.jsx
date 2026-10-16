@@ -184,7 +184,8 @@ export default function Footer() {
       (item.label || "").toLowerCase().includes("whatsapp")
     );
     const sourcePhone = waItem?.value || phoneNumbers[0] || "";
-    return sourcePhone.replace(/\D/g, "");
+    const phoneStr = Array.isArray(sourcePhone) ? sourcePhone[0] : sourcePhone;
+    return String(phoneStr || "").replace(/\D/g, "");
   }, [contactInfo, phoneNumbers]);
 
   return (

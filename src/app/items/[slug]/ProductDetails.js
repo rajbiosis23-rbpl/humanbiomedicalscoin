@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import Link from "next/link";
 import "./page.css"
 import { usePathname } from "next/navigation";
 
@@ -162,47 +163,7 @@ export default function ProductDetails({ slug, product: initialProduct, district
         }
     };
 
-    const productSchema = product
-        ? {
-            "@context": "https://schema.org",
-            "@type": "Product",
-            name: product.title,
-            image: product.image ? [product.image] : [],
-            description:
-                product.desc ||
-                product.description ||
-                product.title,
-            brand: {
-                "@type": "Brand",
-                name: product.brand || "Human Biomedicals",
-            },
-        }
-        : null;
 
-    const faqSchema = product
-        ? {
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: [
-                {
-                    "@type": "Question",
-                    name: `What is ${product.title} used for?`,
-                    acceptedAnswer: {
-                        "@type": "Answer",
-                        text: `${product.title} is used in hospitals, pathology labs and diagnostic centres.`,
-                    },
-                },
-                {
-                    "@type": "Question",
-                    name: "Do you provide installation support?",
-                    acceptedAnswer: {
-                        "@type": "Answer",
-                        text: "Yes, installation and technical support are available.",
-                    },
-                },
-            ],
-        }
-        : null;
 
     const handleCopy = async () => {
         await navigator.clipboard.writeText(window.location.href);
@@ -296,35 +257,25 @@ export default function ProductDetails({ slug, product: initialProduct, district
         <section className="product-page">
             <Toaster position="top-right" />
 
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{
-                    __html: JSON.stringify(productSchema),
-                }}
-            />
-
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{
-                    __html: JSON.stringify(faqSchema),
-                }}
-            />
-
             <div className="container-custom">
 
-                <div className="product-breadcrumb">
+                <nav aria-label="Breadcrumb" className="product-breadcrumb">
 
-                    <span>Home</span>
-
-                    <span>/</span>
-
-                    <span>Products</span>
+                    <Link href={detectedDistrict ? `/${detectedDistrict}` : "/"} className="hover:text-red-700 transition-colors">
+                        Home
+                    </Link>
 
                     <span>/</span>
 
-                    <strong>{product.title}</strong>
+                    <Link href={detectedDistrict ? `/${detectedDistrict}/items` : "/items"} className="hover:text-red-700 transition-colors">
+                        Products
+                    </Link>
 
-                </div>
+                    <span>/</span>
+
+                    <strong className="text-slate-800">{product.title}</strong>
+
+                </nav>
 
                 <div className="product-main">
 

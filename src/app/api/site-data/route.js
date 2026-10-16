@@ -10,7 +10,10 @@ import {
 import { fetchSiteDataFromAdmin } from "@/lib/admin-api";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
+const CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+};
 
 export async function GET(request) {
   try {
@@ -23,7 +26,7 @@ export async function GET(request) {
       const data = await getHomeData();
       return NextResponse.json(
         { success: true, type: "home", websiteId, data },
-        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+        { headers: CACHE_HEADERS }
       );
     }
 
@@ -31,7 +34,7 @@ export async function GET(request) {
       const contactInfo = await getContactData();
       return NextResponse.json(
         { success: true, type: "contact", websiteId, data: { contactInfo }, contactInfo },
-        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+        { headers: CACHE_HEADERS }
       );
     }
 
@@ -39,7 +42,7 @@ export async function GET(request) {
       const services = await getServicesData();
       return NextResponse.json(
         { success: true, type: "services", websiteId, data: { services }, services },
-        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+        { headers: CACHE_HEADERS }
       );
     }
 
@@ -48,20 +51,20 @@ export async function GET(request) {
         const districtData = await getDistrictData(district);
         return NextResponse.json(
           { success: true, type: "district", websiteId, district, data: districtData },
-          { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+          { headers: CACHE_HEADERS }
         );
       }
       const districts = await getDistrictsList();
       return NextResponse.json(
         { success: true, type: "districts", websiteId, data: districts, districts },
-        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+        { headers: CACHE_HEADERS }
       );
     }
 
-    // Default: fetch from SQLite Admin API
+    // Default: fetch from SuperAdmin / MongoDB
     const adminRes = await fetchSiteDataFromAdmin(websiteId, type);
     return NextResponse.json(adminRes, {
-      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+      headers: CACHE_HEADERS,
     });
   } catch (error) {
     console.error("API /api/site-data error:", error);

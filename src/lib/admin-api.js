@@ -11,10 +11,10 @@ import {
   normalizeProduct,
 } from "./catalog-utils.js";
 import {
-  getSqliteDb,
-  getDocFromSqlite,
-  getCollectionFromSqlite,
-} from "./sqliteDb.js";
+  saveQueryToMongo,
+  getSiteDataFromMongo,
+  getCatalogFromMongo,
+} from "./mongodb.js";
 
 // Re-export client-safe catalog utils
 export {
@@ -32,316 +32,257 @@ export {
 
 export const ADMIN_API_BASE_URL = (
   process.env.ADMIN_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_ADMIN_API_URL ||
   process.env.ADMIN_API_URL ||
-  process.env.SQLITE_ADMIN_API_URL ||
   "https://admin.rajbiosis.app"
 ).replace(/\/$/, "");
 
-const FALLBACK_URLS = [
-  ADMIN_API_BASE_URL,
-  "http://localhost:3000",
-  "https://admin.rajbiosis.app",
-].filter((url, index, self) => url && self.indexOf(url) === index);
-
 /**
- * Fetch catalog directly from local SQLite database (catalog.db) with cascading visibility
+ * High-speed In-Memory Cache with Stale-While-Revalidate for instant < 1ms SSR response
  */
-export function fetchMasterCatalogFromSqlite(websiteId = WEBSITE_ID, targetCompanyId = null) {
-  const startTime = performance.now();
-  const company = targetCompanyId || detectCompanyId(websiteId) || PRIMARY_COMPANY;
-  const allProducts = [];
-  const categoryMap = new Map();
+const MEMORY_CACHE = {
+  catalog: { data: null, timestamp: 0, fetching: false },
+  siteData: new Map(), // key -> { data, timestamp }
+};
 
-  try {
-    // 1. Fetch categories for company
-    const rawCategories = getCollectionFromSqlite(`companies/${company}/categories`);
-
-    // Filter categories visible on this website
-    const visibleCategories = rawCategories.filter((cat) => {
-      const catData = cat.data || {};
-      return isItemVisibleOnWebsite(catData, websiteId);
-    });
-
-    // 2. Cascading Hierarchy: Fetch subcategories for visible categories
-    for (const catDoc of visibleCategories) {
-      const catData = catDoc.data || {};
-      const catName = catData.name || catData.category || catDoc.id;
-      const catSlug = catData.slug || makeSlug(catName);
-
-      categoryMap.set(catSlug, {
-        id: catDoc.id,
-        name: catName,
-        category: catName,
-        slug: catSlug,
-        companyId: company,
-        websiteIds: catData.websiteIds || ["all"],
-        subcategories: new Map(),
-      });
-
-      const rawSubcategories = getCollectionFromSqlite(`companies/${company}/categories/${catDoc.id}/subcategories`);
-
-      for (const subDoc of rawSubcategories) {
-        const subData = subDoc.data || {};
-        const subName = subData.name || subData.subCategory || subDoc.id;
-        const subSlug = subData.slug || makeSlug(subName);
-
-        // Subcategory-level visibility check
-        if (!isItemVisibleOnWebsite(subData, websiteId)) {
-          continue;
-        }
-
-        const catEntry = categoryMap.get(catSlug);
-        if (catEntry && !catEntry.subcategories.has(subSlug)) {
-          catEntry.subcategories.set(subSlug, {
-            id: subDoc.id,
-            name: subName,
-            subCategory: subName,
-            slug: subSlug,
-            categoryId: catDoc.id,
-            companyId: company,
-            websiteIds: subData.websiteIds || ["all"],
-          });
-        }
-
-        // Process embedded products array inside subcategory document
-        const embeddedProds = Array.isArray(subData.products) ? subData.products : [];
-        embeddedProds.forEach((prodRaw, pIdx) => {
-          if (isItemVisibleOnWebsite(prodRaw, websiteId)) {
-            const normalized = normalizeProduct(
-              prodRaw,
-              catName,
-              subName,
-              `${company}-${catDoc.id}-${subDoc.id}-${pIdx}`
-            );
-            allProducts.push(normalized);
-          }
-        });
-
-        // Also check nested subcollection products if present
-        const nestedProds = getCollectionFromSqlite(`companies/${company}/categories/${catDoc.id}/subcategories/${subDoc.id}/products`);
-        nestedProds.forEach((pDoc, nIdx) => {
-          const pData = pDoc.data || {};
-          if (isItemVisibleOnWebsite(pData, websiteId)) {
-            const normalized = normalizeProduct(
-              pData,
-              catName,
-              subName,
-              `${company}-${catDoc.id}-${subDoc.id}-nested-${nIdx}`
-            );
-            allProducts.push(normalized);
-          }
-        });
-      }
-    }
-
-    // 3. Standalone / Master products collection
-    const standaloneProds = getCollectionFromSqlite(`companies/${company}/products`);
-    standaloneProds.forEach((pDoc, sIdx) => {
-      const pData = pDoc.data || {};
-      if (isItemVisibleOnWebsite(pData, websiteId)) {
-        const catName = pData.category || "General";
-        const subName = pData.subCategory || pData.subcategory || "General";
-        const normalized = normalizeProduct(
-          pData,
-          catName,
-          subName,
-          `${company}-standalone-${sIdx}`
-        );
-        allProducts.push(normalized);
-      }
-    });
-  } catch (err) {
-    console.error("[admin-api] Error in fetchMasterCatalogFromSqlite:", err);
-  }
-
-  // Deduplicate products by UID / slug
-  const seenSlugs = new Set();
-  const dedupedProducts = [];
-  for (const prod of allProducts) {
-    const key = prod.slug || prod.id;
-    if (!seenSlugs.has(key)) {
-      seenSlugs.add(key);
-      dedupedProducts.push(prod);
-    }
-  }
-
-  // Build clean categoryList hierarchy
-  const categoryList = Array.from(categoryMap.values())
-    .map((cat) => ({
-      ...cat,
-      subcategories: Array.from(cat.subcategories.values()),
-    }))
-    .filter((cat) => cat.subcategories.length > 0 || dedupedProducts.some((p) => p.categoryId === cat.slug));
-
-  const duration = performance.now() - startTime;
-  console.log(`[admin-api] Loaded ${dedupedProducts.length} active products across ${categoryList.length} categories in ${duration.toFixed(2)}ms via SQLite direct query`);
-
-  return {
-    success: true,
-    count: dedupedProducts.length,
-    categoryProducts: dedupedProducts,
-    products: dedupedProducts,
-    categoryList,
-  };
-}
+const CACHE_TTL_MS = 60 * 1000; // 1 minute fresh cache, then revalidates in background
 
 /**
- * Fetch raw catalog data (tries SQLite direct first for instant <2ms updates, with fallback)
+ * Fetch catalog data from SuperAdmin API with in-memory caching and MongoDB Atlas fallback
  */
 export async function fetchRawCatalogData(websiteId = WEBSITE_ID) {
-  // 1. Direct local SQLite query
-  const sqliteResult = fetchMasterCatalogFromSqlite(websiteId);
-  if (sqliteResult.categoryProducts.length > 0 || sqliteResult.categoryList.length > 0) {
-    return sqliteResult;
+  const now = Date.now();
+  const cached = MEMORY_CACHE.catalog;
+
+  // 1. If fresh cache exists, return immediately (< 1ms)
+  if (cached.data && now - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
   }
 
-  // 2. HTTP Admin API fallback (e.g. if DB file not present on filesystem in remote env)
-  for (const baseUrl of FALLBACK_URLS) {
-    try {
-      const url = `${baseUrl}/api/catalog?websiteId=${encodeURIComponent(websiteId)}`;
-      const res = await fetch(url, {
-        cache: "no-store",
-        headers: { "Accept": "application/json" },
-      });
+  // 2. If stale cache exists, return stale immediately while updating in background
+  if (cached.data && !cached.fetching) {
+    refreshCatalogInBackground(websiteId);
+    return cached.data;
+  }
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.success) {
-          const prods = data.categoryProducts || data.products || data.data || [];
-          const cats = data.categoryList || [];
-          if (prods.length > 0 || cats.length > 0) {
-            return {
-              success: true,
-              count: prods.length,
-              categoryProducts: prods,
-              products: prods,
-              categoryList: cats,
-            };
-          }
-        }
+  // 3. Cold start: fetch directly
+  return await refreshCatalogInBackground(websiteId, true);
+}
+
+async function refreshCatalogInBackground(websiteId = WEBSITE_ID, isColdStart = false) {
+  if (MEMORY_CACHE.catalog.fetching && !isColdStart) return;
+  MEMORY_CACHE.catalog.fetching = true;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+
+    const url = `${ADMIN_API_BASE_URL}/api/catalog?websiteId=${encodeURIComponent(websiteId)}`;
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+      next: { revalidate: 60 },
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        const rawProds = data.categoryProducts || data.products || data.data || [];
+        const rawCats = data.categoryList || [];
+
+        const normalizedProds = rawProds.map((p) =>
+          normalizeProduct(p, p.category, p.subCategory, "admin")
+        );
+
+        const result = {
+          success: true,
+          count: normalizedProds.length,
+          categoryProducts: normalizedProds,
+          products: normalizedProds,
+          categoryList: rawCats,
+        };
+
+        MEMORY_CACHE.catalog = {
+          data: result,
+          timestamp: Date.now(),
+          fetching: false,
+        };
+        return result;
       }
-    } catch {
-      // Continue to next fallback URL
+    }
+  } catch (err) {
+    console.warn("[admin-api] SuperAdmin catalog fetch error:", err.message);
+  } finally {
+    MEMORY_CACHE.catalog.fetching = false;
+  }
+
+  // Fallback to MongoDB if SuperAdmin fails or during cold start
+  if (!MEMORY_CACHE.catalog.data) {
+    console.log("[admin-api] Falling back to MongoDB human_products catalog");
+    const mongoData = await getCatalogFromMongo(websiteId);
+    if (mongoData.count > 0) {
+      MEMORY_CACHE.catalog = {
+        data: mongoData,
+        timestamp: Date.now(),
+        fetching: false,
+      };
+      return mongoData;
     }
   }
 
-  return sqliteResult;
+  return (
+    MEMORY_CACHE.catalog.data || {
+      success: false,
+      count: 0,
+      categoryProducts: [],
+      products: [],
+      categoryList: [],
+    }
+  );
 }
 
 /**
- * Fetch site-data (home, contact, services, districts, etc.) from SQLite or HTTP Admin API
+ * Fetch site-data (home, contact, services, districts) from SuperAdmin API with MongoDB fallback
  */
 export async function fetchSiteDataFromAdmin(websiteId = WEBSITE_ID, type = "all") {
-  // 1. Check local SQLite direct document
-  const company = detectCompanyId(websiteId) || PRIMARY_COMPANY;
-  const docPath = `websites/${company}/${websiteId}/pages/${type}`;
-  const localDoc = getDocFromSqlite(docPath);
-  if (localDoc.exists && localDoc.data) {
-    return {
+  const cacheKey = `${websiteId}_${type}`;
+  const now = Date.now();
+  const cached = MEMORY_CACHE.siteData.get(cacheKey);
+
+  if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+
+    const url = `${ADMIN_API_BASE_URL}/api/site-data?websiteId=${encodeURIComponent(websiteId)}&type=${encodeURIComponent(type)}`;
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+      next: { revalidate: 60 },
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success && data.data !== null && data.data !== undefined) {
+        MEMORY_CACHE.siteData.set(cacheKey, { data, timestamp: now });
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn(`[admin-api] Error fetching site-data ${type}:`, err.message);
+  }
+
+  // Fallback to MongoDB direct collection
+  const mongoRes = await getSiteDataFromMongo(websiteId, type);
+  if (mongoRes.success && mongoRes.data) {
+    const fallbackData = {
       success: true,
       type,
       websiteId,
-      data: localDoc.data,
+      data: mongoRes.data,
     };
+    MEMORY_CACHE.siteData.set(cacheKey, { data: fallbackData, timestamp: now });
+    return fallbackData;
   }
 
-  // 2. Fallback to HTTP Admin API
-  for (const baseUrl of FALLBACK_URLS) {
-    try {
-      const url = `${baseUrl}/api/site-data?websiteId=${encodeURIComponent(websiteId)}&type=${encodeURIComponent(type)}`;
-      const res = await fetch(url, {
-        cache: "no-store",
-        headers: { "Accept": "application/json" },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.success && data.data !== null && data.data !== undefined) {
-          return data;
-        }
-      }
-    } catch {
-      // Continue to next fallback
-    }
-  }
-
-  return { success: false, data: null };
+  return cached ? cached.data : { success: false, data: null };
 }
 
 /**
- * Submit Contact Query to Admin API
+ * Submit Contact Query: Saves in MongoDB AND sends to SuperAdmin API
  */
 export async function submitContactQuery(payload) {
   const bodyData = {
     websiteId: WEBSITE_ID,
     ...payload,
+    type: "contact",
     createdAt: new Date().toISOString(),
   };
 
-  for (const baseUrl of FALLBACK_URLS) {
-    try {
-      const url = `${baseUrl}/api/contact-query`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify(bodyData),
-      });
+  // 1. Save directly to MongoDB queries collection (guaranteed persistence)
+  const mongoPromise = saveQueryToMongo(bodyData);
 
-      if (res.ok) {
-        return {
-          success: true,
-          message: "Contact query processed successfully",
-        };
-      }
-    } catch {
-      // Continue to next fallback
+  // 2. Submit to SuperAdmin API
+  let adminSuccess = false;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(`${ADMIN_API_BASE_URL}/api/contact-query`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(bodyData),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      adminSuccess = true;
     }
+  } catch (err) {
+    console.warn("[admin-api] SuperAdmin contact-query POST error:", err.message);
   }
 
+  const mongoResult = await mongoPromise;
+
   return {
-    success: true,
-    message: "Contact query submitted",
+    success: mongoResult.success || adminSuccess,
+    queryId: mongoResult.queryId,
+    message: "Thank you! Your contact query has been submitted successfully.",
   };
 }
 
 /**
- * Submit Product Query to Admin API
+ * Submit Product Query: Saves in MongoDB AND sends to SuperAdmin API
  */
 export async function submitProductQuery(payload) {
   const bodyData = {
     websiteId: WEBSITE_ID,
     ...payload,
+    type: "product",
     createdAt: new Date().toISOString(),
   };
 
-  for (const baseUrl of FALLBACK_URLS) {
-    try {
-      const url = `${baseUrl}/api/product-query`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify(bodyData),
-      });
+  // 1. Save directly to MongoDB queries collection (guaranteed persistence)
+  const mongoPromise = saveQueryToMongo(bodyData);
 
-      if (res.ok) {
-        return {
-          success: true,
-          message: "Product enquiry processed successfully",
-        };
-      }
-    } catch {
-      // Continue to next fallback
+  // 2. Submit to SuperAdmin API
+  let adminSuccess = false;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(`${ADMIN_API_BASE_URL}/api/product-query`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(bodyData),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      adminSuccess = true;
     }
+  } catch (err) {
+    console.warn("[admin-api] SuperAdmin product-query POST error:", err.message);
   }
 
+  const mongoResult = await mongoPromise;
+
   return {
-    success: true,
-    message: "Product enquiry submitted",
+    success: mongoResult.success || adminSuccess,
+    queryId: mongoResult.queryId,
+    message: "Thank you! Your product enquiry has been received successfully.",
   };
 }

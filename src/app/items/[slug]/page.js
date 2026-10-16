@@ -1,8 +1,7 @@
 import ProductDetails from "./ProductDetails";
 import { fetchFullCatalog, getProductBySlug } from "@/lib/data-fetcher-server";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -80,5 +79,115 @@ export async function generateMetadata({ params }) {
 export default async function Page({ params }) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  return <ProductDetails slug={slug} product={product} />;
+
+  const productUrl = `https://humanbiomedicals.co.in/items/${slug}`;
+  const productImages = product?.images?.length
+    ? product.images
+    : product?.image
+    ? [product.image]
+    : ["https://humanbiomedicals.co.in/images/logo.png"];
+
+  const productSchema = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.title,
+        image: productImages,
+        description: product.desc || product.description || product.title,
+        sku: product.slug || product.id,
+        mpn: product.model || product.slug,
+        category: product.category || "Biomedical Equipment",
+        brand: {
+          "@type": "Brand",
+          name: product.brand || "Human Biomedicals",
+        },
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "INR",
+          price: product.price ? String(product.price).replace(/[^0-9.]/g, "") || "1" : "1",
+          availability: "https://schema.org/InStock",
+          url: productUrl,
+          seller: {
+            "@type": "Organization",
+            name: "Human Biomedicals",
+          },
+        },
+      }
+    : null;
+
+  const breadcrumbSchema = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://humanbiomedicals.co.in",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Products",
+            item: "https://humanbiomedicals.co.in/items",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: product.title,
+            item: productUrl,
+          },
+        ],
+      }
+    : null;
+
+  const faqSchema = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: `What is ${product.title} used for?`,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: `${product.title} is used in hospitals, pathology labs, diagnostic centres, and healthcare facilities.`,
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Do you provide quotation and delivery support in India?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Yes, Human Biomedicals provides fast delivery, official quotation, and technical support across all districts in India.",
+            },
+          },
+        ],
+      }
+    : null;
+
+  return (
+    <>
+      {productSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        />
+      )}
+      {breadcrumbSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
+      )}
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+      <ProductDetails slug={slug} product={product} />
+    </>
+  );
 }

@@ -113,8 +113,23 @@ export default function ContactPage({
       ? `${districtData.district || districtData.name || ""}, ${districtData.state || ""}, India`
       : null;
 
+  // Helper to safely extract string parts whether value is a string, array, number, or object
+  const extractParts = (raw) => {
+    if (raw == null) return [];
+    if (Array.isArray(raw)) {
+      return raw.flatMap(extractParts);
+    }
+    if (typeof raw === "object") {
+      return [String(raw.value || raw.text || raw.label || JSON.stringify(raw))];
+    }
+    return String(raw)
+      .split(/[,/|\n]/)
+      .map((v) => v.trim())
+      .filter(Boolean);
+  };
+
   // ADMIN ADDRESS
-  const adminAddress =
+  const rawAdminAddress =
     contactInfo.find(
       (item) =>
         item.label
@@ -125,6 +140,10 @@ export default function ContactPage({
           ?.toLowerCase()
           ?.includes("address")
     )?.value;
+
+  const adminAddress = Array.isArray(rawAdminAddress)
+    ? rawAdminAddress.join(", ")
+    : (rawAdminAddress ? String(rawAdminAddress) : "");
 
   // FINAL ADDRESS
   const finalAddress =
@@ -397,18 +416,40 @@ export default function ContactPage({
                     finalAddress || value;
                 }
 
-                const isPhone = label.includes("phone") || label.includes("mobile") || label.includes("call") || label.includes("contact");
+                const isPhone =
+                  label.includes("phone") ||
+                  label.includes("mobile") ||
+                  label.includes("call") ||
+                  label.includes("contact") ||
+                  label.includes("tel") ||
+                  label.includes("whatsapp");
                 const isEmail = label.includes("email") || label.includes("mail");
+                const isAddress = label.includes("address") || label.includes("office") || label.includes("location");
 
-                // Split multiple values if comma/slash separated
-                const parts = typeof value === "string" ? value.split(/[,/|\n]/).map(v => v.trim()).filter(Boolean) : [value];
+                const parts = extractParts(value);
 
                 return (
-
                   <div
                     key={index}
                     className="contact-card"
                   >
+                    <div className="contact-card-icon-wrap" aria-hidden="true">
+                      {isPhone ? (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                      ) : isEmail ? (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect width="20" height="16" x="2" y="4" rx="2"/>
+                          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                        </svg>
+                      ) : (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                          <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                      )}
+                    </div>
 
                     <h3>
                       {item.label}
@@ -416,11 +457,15 @@ export default function ContactPage({
 
                     <div className="contact-card-values">
                       {parts.map((part, pIdx) => {
+                        const partStr = String(part ?? "").trim();
+                        if (!partStr) return null;
+
                         if (isPhone) {
+                          const cleanTel = partStr.replace(/\s+/g, "").replace(/[^0-9+]/g, "");
                           return (
                             <p key={pIdx}>
-                              <a href={`tel:${part.replace(/\s+/g, "")}`}>
-                                {part}
+                              <a href={`tel:${cleanTel}`}>
+                                {partStr}
                               </a>
                             </p>
                           );
@@ -428,15 +473,15 @@ export default function ContactPage({
                         if (isEmail) {
                           return (
                             <p key={pIdx}>
-                              <a href={`mailto:${part}`}>
-                                {part}
+                              <a href={`mailto:${partStr}`}>
+                                {partStr}
                               </a>
                             </p>
                           );
                         }
                         return (
                           <p key={pIdx}>
-                            {part}
+                            {partStr}
                           </p>
                         );
                       })}

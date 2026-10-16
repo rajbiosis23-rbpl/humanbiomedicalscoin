@@ -1,8 +1,7 @@
 import { fetchFullCatalog } from "@/lib/data-fetcher-server";
 import ProductsClient from "./ProductsClient";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata() {
   const url = "https://humanbiomedicals.co.in/items";
@@ -23,12 +22,35 @@ export async function generateMetadata() {
 
 export default async function ProductsPage({ district = null, city = null }) {
   const allProducts = await fetchFullCatalog();
+  const canonicalUrl = district
+    ? `https://humanbiomedicals.co.in/${district}/items`
+    : "https://humanbiomedicals.co.in/items";
+
+  const supplierSchema = {
+    "@context": "https://schema.org",
+    "@type": "MedicalEquipmentSupplier",
+    name: "Human Biomedicals",
+    url: canonicalUrl,
+    areaServed: city || "India",
+    description: `Leading supplier of medical laboratory, diagnostic and hospital equipment${city ? ` in ${city}` : " in India"}.`,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: city || "Jaipur",
+      addressCountry: "India",
+    },
+  };
 
   return (
-    <ProductsClient
-      initialProducts={allProducts}
-      district={district}
-      city={city}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(supplierSchema) }}
+      />
+      <ProductsClient
+        initialProducts={allProducts}
+        district={district}
+        city={city}
+      />
+    </>
   );
 }

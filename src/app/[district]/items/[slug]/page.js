@@ -1,8 +1,7 @@
 import ProductDetails from "@/app/items/[slug]/ProductDetails";
 import { getProductBySlug } from "@/lib/data-fetcher-server";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
   const { slug, district } = await params;
@@ -74,11 +73,91 @@ export default async function Page({ params }) {
   const { slug, district } = await params;
   const product = await getProductBySlug(slug);
 
+  const city = district
+    ? district.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "India";
+
+  const productUrl = `https://humanbiomedicals.co.in/${district}/items/${slug}`;
+  const productImages = product?.images?.length
+    ? product.images
+    : product?.image
+    ? [product.image]
+    : ["https://humanbiomedicals.co.in/images/logo.png"];
+
+  const productSchema = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: `${product.title} in ${city}`,
+        image: productImages,
+        description: product.desc || product.description || product.title,
+        sku: product.slug || product.id,
+        mpn: product.model || product.slug,
+        category: product.category || "Biomedical Equipment",
+        brand: {
+          "@type": "Brand",
+          name: product.brand || "Human Biomedicals",
+        },
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "INR",
+          price: product.price ? String(product.price).replace(/[^0-9.]/g, "") || "1" : "1",
+          availability: "https://schema.org/InStock",
+          url: productUrl,
+          seller: {
+            "@type": "Organization",
+            name: "Human Biomedicals",
+          },
+        },
+      }
+    : null;
+
+  const breadcrumbSchema = product
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: `https://humanbiomedicals.co.in/${district}`,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Products",
+            item: `https://humanbiomedicals.co.in/${district}/items`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: product.title,
+            item: productUrl,
+          },
+        ],
+      }
+    : null;
+
   return (
-    <ProductDetails
-      slug={slug}
-      district={district}
-      product={product}
-    />
+    <>
+      {productSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        />
+      )}
+      {breadcrumbSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
+      )}
+      <ProductDetails
+        slug={slug}
+        district={district}
+        product={product}
+      />
+    </>
   );
 }

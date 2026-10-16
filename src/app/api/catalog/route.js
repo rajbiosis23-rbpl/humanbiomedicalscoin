@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { fetchFullCatalogData } from "@/lib/db-server";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -10,13 +9,13 @@ export async function GET() {
     return NextResponse.json(
       {
         success: true,
-        count: data.categoryProducts.length,
-        categoryList: data.categoryList,
-        products: data.categoryProducts,
+        count: (data.categoryProducts || []).length,
+        categoryList: data.categoryList || [],
+        products: data.categoryProducts || [],
       },
       {
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
         },
       }
     );

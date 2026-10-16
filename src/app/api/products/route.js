@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { fetchFullCatalog } from "@/lib/db-server";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export async function GET(request) {
   try {
@@ -16,14 +15,18 @@ export async function GET(request) {
     if (category) {
       const catLower = category.toLowerCase();
       products = products.filter(
-        (p) => (p.category || "").toLowerCase() === catLower || (p.categoryId || "").toLowerCase() === catLower
+        (p) =>
+          (p.category || "").toLowerCase() === catLower ||
+          (p.categoryId || "").toLowerCase() === catLower
       );
     }
 
     if (subcategory) {
       const subLower = subcategory.toLowerCase();
       products = products.filter(
-        (p) => (p.subCategory || "").toLowerCase() === subLower || (p.subcategoryId || "").toLowerCase() === subLower
+        (p) =>
+          (p.subCategory || "").toLowerCase() === subLower ||
+          (p.subcategoryId || "").toLowerCase() === subLower
       );
     }
 
@@ -46,7 +49,7 @@ export async function GET(request) {
       },
       {
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
         },
       }
     );

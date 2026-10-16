@@ -13,10 +13,6 @@ import {
   fetchRawCatalogData,
   fetchSiteDataFromAdmin,
 } from "./admin-api.js";
-import {
-  getDocFromSqlite,
-  getCollectionFromSqlite,
-} from "./sqliteDb.js";
 
 export {
   WEBSITE_ID,
@@ -36,7 +32,7 @@ export {
  */
 export const fetchFullCatalog = cache(async () => {
   const result = await fetchRawCatalogData(WEBSITE_ID);
-  return result.categoryProducts;
+  return result.categoryProducts || result.products || [];
 });
 
 export const fetchFullCatalogData = cache(async () => {
@@ -46,8 +42,8 @@ export const fetchFullCatalogData = cache(async () => {
 export async function getCategoriesData() {
   const data = await fetchFullCatalogData();
   return {
-    categoryList: data.categoryList,
-    categoryProducts: data.categoryProducts,
+    categoryList: data.categoryList || [],
+    categoryProducts: data.categoryProducts || data.products || [],
   };
 }
 
@@ -55,6 +51,7 @@ export async function getProductBySlug(slug) {
   if (!slug) return null;
   const products = await fetchFullCatalog();
   const target = normalizeSlug(slug);
+
   return (
     products.find((p) => {
       if (!p) return false;
@@ -105,7 +102,11 @@ export async function getDistrictData(districtSlug) {
     const districts = res?.districts || res?.data || [];
     const targetSlug = districtSlug.toLowerCase().trim();
     if (Array.isArray(districts)) {
-      return districts.find((d) => (d.slug || d.id || "").toLowerCase() === targetSlug) || null;
+      return (
+        districts.find(
+          (d) => (d.slug || d.id || "").toLowerCase() === targetSlug
+        ) || null
+      );
     }
     return null;
   } catch (e) {
@@ -119,7 +120,9 @@ export async function getDistrictsList() {
     const res = await fetchSiteDataFromAdmin(WEBSITE_ID, "districts");
     const districts = res?.districts || res?.data || [];
     if (Array.isArray(districts)) {
-      return districts.map((d) => (typeof d === "string" ? d : d.slug || d.id || "")).filter(Boolean);
+      return districts
+        .map((d) => (typeof d === "string" ? d : d.slug || d.id || ""))
+        .filter(Boolean);
     }
     return [];
   } catch (e) {

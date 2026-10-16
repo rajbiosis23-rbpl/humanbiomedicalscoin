@@ -27,15 +27,19 @@ export default function Hero({ city = "" }) {
     fetchHero();
   }, []);
 
-  const badge = heroData?.badge || "";
-  const title = heroData?.title || "";
-  const description = heroData?.description || "";
-  const button1Text = heroData?.button1Text || "";
-  const button2Text = heroData?.button2Text || "";
+  const badge = heroData?.badge || "Certified Healthcare Diagnostic Partner";
+  const title =
+    heroData?.title ||
+    `Hospital Diagnostic Systems, Laboratory Instrumentation & Biomedical Devices${city ? ` in ${city}` : ""}`;
+  const description =
+    heroData?.description ||
+    "Human Biomedicals is a trusted supplier of automated clinical analyzers, pathology instruments, point-of-care diagnostics, and medical consumables across India.";
+  const button1Text = heroData?.button1Text || "Request Quotation";
+  const button2Text = heroData?.button2Text || "Explore Equipment";
 
   // Static links as specified
-  const button1Link = city ? `/${city.toLowerCase()}/contact/` : "/contact";
-  const button2Link = city ? `/${city.toLowerCase()}/items/` : "/items";
+  const button1Link = city ? `/${city.toLowerCase()}/contact` : "/contact";
+  const button2Link = city ? `/${city.toLowerCase()}/items` : "/items";
 
   const heroImageUrl = heroData?.imageUrl || heroData?.image || "";
 

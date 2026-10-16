@@ -1,12 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["node:sqlite"],
+  serverExternalPackages: ["mongodb"],
+  compress: true,
+  poweredByHeader: false,
   images: {
-    unoptimized: true,
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "**",
+      },
+    ],
   },
 };
 
 export default nextConfig;
-import('@opennextjs/cloudflare')
-  .then(m => m.initOpenNextCloudflareForDev?.())
-  .catch(() => {});
